@@ -45,10 +45,6 @@ public abstract class Module extends Function {
      */
     protected Map<String, Module> _modules;
 
-    public void set_parent(Module _parent) {
-        this._parent = _parent;
-    }
-
     /**
      * 父模块引用
      */
@@ -565,6 +561,7 @@ public abstract class Module extends Function {
         this.name = name;
     }
 
+
     /**
      * 获取父模块
      *
@@ -573,4 +570,9 @@ public abstract class Module extends Function {
     public Module getParent() {
         return _parent;
     }
+
+    public void setParent(Module _parent) {
+        this._parent = _parent;
+    }
+
 }

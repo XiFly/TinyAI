@@ -143,7 +143,7 @@ public class BasicUsage {
     }
 
     private static String shapeToString(Shape shape) {
-        int[] dims = shape.getShape();
+        int[] dims = shape.getShapeDims();
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < dims.length; i++) {
             if (i > 0) sb.append(", ");

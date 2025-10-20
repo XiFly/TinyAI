@@ -1,5 +1,7 @@
 package io.leavesfly.tinyai.agent.cursor;
 
+import io.leavesfly.tinyai.agent.cursor.v1.AICodingCursor;
+import io.leavesfly.tinyai.agent.cursor.v1.RefactorSuggestion;
 import org.junit.Test;
 import org.junit.Before;
 import static org.junit.Assert.*;
@@ -199,7 +201,7 @@ public class AICodingCursorTest {
         cursor.analyzeCode("public class Test {}");
         cursor.generateCode("method test");
         
-        List<io.leavesfly.tinyai.agent.context.Message> history = cursor.getSessionHistory();
+        List<String> history = cursor.getSessionHistory();
         
         assertNotNull("会话历史不应为空", history);
         assertTrue("应该记录操作历史", history.size() > 0);

@@ -1,11 +1,7 @@
 package io.leavesfly.tinyai.nnet.v2.layer.transformer;
 
 import io.leavesfly.tinyai.func.Variable;
-import io.leavesfly.tinyai.ndarr.NdArray;
-import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.v2.core.Module;
-import io.leavesfly.tinyai.nnet.v2.core.Parameter;
-import io.leavesfly.tinyai.nnet.v2.init.Initializers;
 import io.leavesfly.tinyai.nnet.v2.layer.dnn.Linear;
 
 /**
@@ -106,7 +102,7 @@ public class MultiHeadAttention extends Module {
         Variable key = inputs.length > 1 ? inputs[1] : query;
         Variable value = inputs.length > 2 ? inputs[2] : key;
 
-        int[] queryShape = query.getValue().getShape().getShape();
+        int[] queryShape = query.getValue().getShape().getShapeDims();
         int batchSize = queryShape[0];
         int seqLen = queryShape[1];
 

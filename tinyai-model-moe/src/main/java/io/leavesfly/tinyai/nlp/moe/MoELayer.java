@@ -30,147 +30,147 @@ import java.util.List;
  * @version 1.0
  */
 public class MoELayer extends Layer {
-    
+
     private List<Expert> experts;           // 专家网络列表
     private GateNetwork gateNetwork;        // 门控网络
-    
+
     private int numExperts;                 // 专家数量
     private int dModel;                     // 输入/输出维度
     private int dExpert;                    // 专家隐藏层维度
     private int topK;                       // Top-K专家选择
-    
+
     // 统计信息
     private long totalTokens;               // 处理的总token数
     private long[] expertUsageCount;        // 每个专家的使用次数
-    
+
     /**
      * 构造MoE层
-     * 
-     * @param name 层名称
-     * @param numExperts 专家数量
-     * @param dModel 输入/输出维度
-     * @param dExpert 专家隐藏层维度
-     * @param topK Top-K专家选择数量
-     * @param useNoise 门控是否使用噪声
+     *
+     * @param name         层名称
+     * @param numExperts   专家数量
+     * @param dModel       输入/输出维度
+     * @param dExpert      专家隐藏层维度
+     * @param topK         Top-K专家选择数量
+     * @param useNoise     门控是否使用噪声
      * @param noiseEpsilon 噪声强度
      */
     public MoELayer(String name, int numExperts, int dModel, int dExpert, int topK,
-                   boolean useNoise, double noiseEpsilon) {
-        super(name, Shape.of(-1, -1, dModel), Shape.of(-1, -1, dModel));
-        
+                    boolean useNoise, double noiseEpsilon) {
+        super(name);
+
         if (numExperts <= 0) {
             throw new IllegalArgumentException("专家数量必须大于0");
         }
         if (topK <= 0 || topK > numExperts) {
             throw new IllegalArgumentException("topK必须在1到numExperts之间");
         }
-        
+
         this.numExperts = numExperts;
         this.dModel = dModel;
         this.dExpert = dExpert;
         this.topK = topK;
         this.expertUsageCount = new long[numExperts];
-        
+
         init();
         initializeExperts(useNoise, noiseEpsilon);
     }
-    
+
     /**
      * 使用默认参数的构造函数
      */
     public MoELayer(String name, int numExperts, int dModel, int dExpert) {
         this(name, numExperts, dModel, dExpert, 2, true, 0.1);
     }
-    
+
     /**
      * 简化的构造函数（默认专家隐藏层维度为4倍dModel）
      */
     public MoELayer(String name, int numExperts, int dModel) {
         this(name, numExperts, dModel, dModel * 4);
     }
-    
+
     @Override
     public void init() {
         if (!alreadyInit) {
             alreadyInit = true;
         }
     }
-    
+
     /**
      * 初始化专家网络和门控网络
      */
     private void initializeExperts(boolean useNoise, double noiseEpsilon) {
         // 初始化门控网络
         gateNetwork = new GateNetwork(
-            name + "_gate", 
-            dModel, 
-            numExperts, 
-            topK, 
-            useNoise, 
-            noiseEpsilon, 
-            true  // 启用负载均衡
+                name + "_gate",
+                dModel,
+                numExperts,
+                topK,
+                useNoise,
+                noiseEpsilon,
+                true  // 启用负载均衡
         );
-        
+
         // 初始化专家网络列表
         experts = new ArrayList<>();
         for (int i = 0; i < numExperts; i++) {
             Expert expert = new Expert(
-                name + "_expert", 
-                i,  // 专家ID
-                dModel, 
-                dExpert
+                    name + "_expert",
+                    i,  // 专家ID
+                    dModel,
+                    dExpert
             );
             experts.add(expert);
         }
     }
-    
+
     @Override
     public Variable layerForward(Variable... inputs) {
         Variable input = inputs[0];
         NdArray inputData = input.getValue();
-        
+
         int batchSize = inputData.getShape().getDimension(0);
         int seqLen = inputData.getShape().getDimension(1);
-        
+
         // 验证输入维度
         if (inputData.getShape().getDimension(2) != dModel) {
             throw new IllegalArgumentException(
-                String.format("MoE层输入维度不匹配。期望%d，实际%d", 
-                             dModel, inputData.getShape().getDimension(2))
+                    String.format("MoE层输入维度不匹配。期望%d，实际%d",
+                            dModel, inputData.getShape().getDimension(2))
             );
         }
-        
+
         // 1. 使用门控网络选择专家
         GateNetwork.GateOutput gateOutput = gateNetwork.selectTopKExperts(input);
-        
+
         // 2. 为每个token计算专家输出
         NdArray finalOutput = NdArray.zeros(inputData.getShape());
-        
+
         for (int b = 0; b < batchSize; b++) {
             for (int s = 0; s < seqLen; s++) {
                 // 获取当前token的输入
                 NdArray tokenInput = extractTokenInput(inputData, b, s);
                 Variable tokenVar = new Variable(tokenInput);
-                
+
                 // 计算选中专家的加权输出
                 NdArray tokenOutput = computeTokenOutput(
-                    tokenVar, 
-                    gateOutput.expertIndices[b][s], 
-                    gateOutput.expertWeights[b][s]
+                        tokenVar,
+                        gateOutput.expertIndices[b][s],
+                        gateOutput.expertWeights[b][s]
                 );
-                
+
                 // 将结果写回最终输出
                 setTokenOutput(finalOutput, tokenOutput, b, s);
-                
+
                 // 更新专家使用统计
                 updateExpertUsageStats(gateOutput.expertIndices[b][s]);
             }
         }
-        
+
         totalTokens += batchSize * seqLen;
         return new Variable(finalOutput);
     }
-    
+
     /**
      * 提取单个token的输入
      */
@@ -183,24 +183,24 @@ public class MoELayer extends Layer {
         }
         return tokenInput;
     }
-    
+
     /**
      * 计算单个token通过选中专家的输出
      */
     private NdArray computeTokenOutput(Variable tokenInput, int[] expertIndices, float[] expertWeights) {
         NdArray weightedSum = NdArray.zeros(Shape.of(1, 1, dModel));
-        
+
         // 对每个选中的专家计算输出并加权求和
         for (int k = 0; k < topK; k++) {
             int expertIdx = expertIndices[k];
             float weight = expertWeights[k];
-            
+
             if (weight > 0.0f && expertIdx >= 0 && expertIdx < numExperts) {
                 // 通过专家计算输出
                 Expert expert = experts.get(expertIdx);
                 Variable expertOutput = expert.layerForward(tokenInput);
                 NdArray expertOutputData = expertOutput.getValue();
-                
+
                 // 加权累加到最终输出
                 for (int d = 0; d < dModel; d++) {
                     float currentValue = weightedSum.get(0, 0, d);
@@ -209,10 +209,10 @@ public class MoELayer extends Layer {
                 }
             }
         }
-        
+
         return weightedSum;
     }
-    
+
     /**
      * 将token输出设置到最终输出中
      */
@@ -222,7 +222,7 @@ public class MoELayer extends Layer {
             finalOutput.set(value, batchIdx, seqIdx, d);
         }
     }
-    
+
     /**
      * 更新专家使用统计
      */
@@ -233,12 +233,12 @@ public class MoELayer extends Layer {
             }
         }
     }
-    
+
     @Override
     public NdArray forward(NdArray... inputs) {
         return layerForward(new Variable(inputs[0])).getValue();
     }
-    
+
     @Override
     public List<NdArray> backward(NdArray yGrad) {
         // MoE层的反向传播需要根据门控权重分配梯度到相应的专家
@@ -246,12 +246,12 @@ public class MoELayer extends Layer {
         result.add(yGrad);
         return result;
     }
-    
+
     @Override
     public int requireInputNum() {
         return 1;
     }
-    
+
     /**
      * 获取专家负载均衡统计信息
      */
@@ -259,10 +259,10 @@ public class MoELayer extends Layer {
         if (totalTokens == 0) {
             return new LoadBalancingStats(expertUsageCount, 0, 0.0, 0.0);
         }
-        
+
         // 计算平均使用率
         double averageUsage = (double) totalTokens / numExperts;
-        
+
         // 计算负载不均衡系数（标准差）
         double variance = 0.0;
         for (long usage : expertUsageCount) {
@@ -271,10 +271,10 @@ public class MoELayer extends Layer {
         }
         double standardDeviation = Math.sqrt(variance / numExperts);
         double loadImbalance = standardDeviation / averageUsage;
-        
+
         return new LoadBalancingStats(expertUsageCount, totalTokens, averageUsage, loadImbalance);
     }
-    
+
     /**
      * 重置统计信息
      */
@@ -284,17 +284,40 @@ public class MoELayer extends Layer {
             expertUsageCount[i] = 0;
         }
     }
-    
+
     // Getter方法
-    public int getNumExperts() { return numExperts; }
-    public int getDModel() { return dModel; }
-    public int getDExpert() { return dExpert; }
-    public int getTopK() { return topK; }
-    public List<Expert> getExperts() { return experts; }
-    public GateNetwork getGateNetwork() { return gateNetwork; }
-    public long getTotalTokens() { return totalTokens; }
-    public long[] getExpertUsageCount() { return expertUsageCount.clone(); }
-    
+    public int getNumExperts() {
+        return numExperts;
+    }
+
+    public int getDModel() {
+        return dModel;
+    }
+
+    public int getDExpert() {
+        return dExpert;
+    }
+
+    public int getTopK() {
+        return topK;
+    }
+
+    public List<Expert> getExperts() {
+        return experts;
+    }
+
+    public GateNetwork getGateNetwork() {
+        return gateNetwork;
+    }
+
+    public long getTotalTokens() {
+        return totalTokens;
+    }
+
+    public long[] getExpertUsageCount() {
+        return expertUsageCount.clone();
+    }
+
     /**
      * 负载均衡统计信息类
      */
@@ -303,15 +326,15 @@ public class MoELayer extends Layer {
         public final long totalTokens;
         public final double averageUsage;
         public final double loadImbalance;  // 0.0表示完全均衡，值越大表示越不均衡
-        
-        public LoadBalancingStats(long[] expertUsageCount, long totalTokens, 
-                                double averageUsage, double loadImbalance) {
+
+        public LoadBalancingStats(long[] expertUsageCount, long totalTokens,
+                                  double averageUsage, double loadImbalance) {
             this.expertUsageCount = expertUsageCount.clone();
             this.totalTokens = totalTokens;
             this.averageUsage = averageUsage;
             this.loadImbalance = loadImbalance;
         }
-        
+
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
@@ -328,10 +351,10 @@ public class MoELayer extends Layer {
             return sb.toString();
         }
     }
-    
+
     @Override
     public String toString() {
-        return String.format("MoELayer(numExperts=%d, dModel=%d, dExpert=%d, topK=%d, totalTokens=%d)", 
-                           numExperts, dModel, dExpert, topK, totalTokens);
+        return String.format("MoELayer(numExperts=%d, dModel=%d, dExpert=%d, topK=%d, totalTokens=%d)",
+                numExperts, dModel, dExpert, topK, totalTokens);
     }
 }

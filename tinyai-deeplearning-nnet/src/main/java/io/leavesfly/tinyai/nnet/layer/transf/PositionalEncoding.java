@@ -1,4 +1,4 @@
-package io.leavesfly.tinyai.nnet.layer.transformer;
+package io.leavesfly.tinyai.nnet.layer.transf;
 
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
@@ -40,7 +40,7 @@ public class PositionalEncoding extends Layer {
      * @param dropoutRate  dropout比率
      */
     public PositionalEncoding(String name, int dModel, int maxSeqLength, double dropoutRate) {
-        super(name, Shape.of(-1, maxSeqLength, dModel), Shape.of(-1, maxSeqLength, dModel));
+        super(name);
         this.maxSeqLength = maxSeqLength;
         this.dropoutRate = dropoutRate;
         this.dropout = dropoutRate > 0.0;

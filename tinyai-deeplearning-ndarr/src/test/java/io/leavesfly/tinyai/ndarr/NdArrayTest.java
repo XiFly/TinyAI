@@ -1,5 +1,6 @@
 package io.leavesfly.tinyai.ndarr;
 
+import io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -295,6 +296,159 @@ public class NdArrayTest {
                 assertTrue(softmaxMatrix[i][j] > 0);
             }
         }
+    }
+
+    @Test
+    public void testSoftMaxMultiDimDefaultAxis() {
+        float[][][] data = new float[][][]{
+                { {1f, 2f, 3f, 4f}, {0f, -1f, 1f, 2f}, {10f, 11f, 9f, 8f} },
+                { {4f, 3f, 2f, 1f}, {2f, 1f, 0f, -1f}, {8f, 9f, 11f, 10f} }
+        };
+        NdArray input = NdArray.of(data);
+        NdArray result = input.softMax(); // 默认沿最后一维
+
+        int n = input.getShape().getDimension(0);
+        int t = input.getShape().getDimension(1);
+        int c = input.getShape().getDimension(2);
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < t; j++) {
+                float sum = 0f;
+                for (int k = 0; k < c; k++) {
+                    float v = result.get(i, j, k);
+                    assertTrue(v >= 0f);
+                    sum += v;
+                }
+                assertEquals(1.0f, sum, 1e-6f);
+            }
+        }
+    }
+
+    @Test
+    public void testSoftMaxAxisSpecified3D() {
+        float[][][] data = new float[][][]{
+                { {1f, 2f, 3f}, {4f, 5f, 6f} },
+                { {2f, 1f, 0f}, {6f, 5f, 4f} }
+        };
+        NdArrayCpu cpuInput = (NdArrayCpu) NdArray.of(data);
+
+        // axis = 0（沿第0维）：对每个 (j,k) 位置的两个元素做softmax
+        NdArrayCpu axis0 = cpuInput.softMax(0);
+        int d0 = cpuInput.getShape().getDimension(0);
+        int d1 = cpuInput.getShape().getDimension(1);
+        int d2 = cpuInput.getShape().getDimension(2);
+        for (int j = 0; j < d1; j++) {
+            for (int k = 0; k < d2; k++) {
+                float sum = 0f;
+                for (int i = 0; i < d0; i++) {
+                    float v = axis0.get(i, j, k);
+                    assertTrue(v >= 0f);
+                    sum += v;
+                }
+                assertEquals(1.0f, sum, 1e-6f);
+            }
+        }
+
+        // axis = 1（沿第1维）：对每个 (i,k) 位置的两个元素做softmax
+        NdArrayCpu axis1 = cpuInput.softMax(1);
+        for (int i = 0; i < d0; i++) {
+            for (int k = 0; k < d2; k++) {
+                float sum = 0f;
+                for (int j = 0; j < d1; j++) {
+                    float v = axis1.get(i, j, k);
+                    assertTrue(v >= 0f);
+                    sum += v;
+                }
+                assertEquals(1.0f, sum, 1e-6f);
+            }
+        }
+
+        // axis = 2（沿第2维）：每个 (i,j,:) 和为1
+        NdArrayCpu axis2 = cpuInput.softMax(2);
+        for (int i = 0; i < d0; i++) {
+            for (int j = 0; j < d1; j++) {
+                float sum = 0f;
+                for (int k = 0; k < d2; k++) {
+                    float v = axis2.get(i, j, k);
+                    assertTrue(v >= 0f);
+                    sum += v;
+                }
+                assertEquals(1.0f, sum, 1e-6f);
+            }
+        }
+    }
+
+    @Test
+    public void testSoftMaxNegativeAxisEqualsPositive() {
+        float[][][] data = new float[][][]{
+                { {1f, 2f, 3f}, {3f, 2f, 1f} },
+                { {0f, 0f, 0f}, {1f, 1f, 1f} }
+        };
+        NdArrayCpu cpuInput = (NdArrayCpu) NdArray.of(data);
+
+        NdArrayCpu lastAxisPos = cpuInput.softMax(2);
+        NdArrayCpu lastAxisNeg = cpuInput.softMax(-1);
+
+        int d0 = cpuInput.getShape().getDimension(0);
+        int d1 = cpuInput.getShape().getDimension(1);
+        int d2 = cpuInput.getShape().getDimension(2);
+
+        for (int i = 0; i < d0; i++) {
+            for (int j = 0; j < d1; j++) {
+                for (int k = 0; k < d2; k++) {
+                    assertEquals(lastAxisPos.get(i, j, k), lastAxisNeg.get(i, j, k), 1e-6f);
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testSoftMaxNumericalStability() {
+        // 极端值输入，若无数值稳定性容易溢出
+        float[][] logits = new float[][]{
+                {1000f, 1001f, 999f},
+                {-1000f, -999f, -1001f}
+        };
+        NdArray result = NdArray.of(logits).softMax();
+        int rows = result.getShape().getRow();
+        int cols = result.getShape().getColumn();
+
+        for (int i = 0; i < rows; i++) {
+            float sum = 0f;
+            for (int j = 0; j < cols; j++) {
+                float v = result.get(i, j);
+                assertTrue(!Float.isNaN(v));
+                assertTrue(!Float.isInfinite(v));
+                assertTrue(v >= 0f);
+                sum += v;
+            }
+            assertEquals(1.0f, sum, 1e-6f);
+        }
+    }
+
+    @Test
+    public void testSoftMax1DVector() {
+        float[] vec = new float[]{1f, 2f, 3f, 4f};
+        // 默认 of(float[]) 的形状是 (1, N)，softmax 沿最后一维
+        NdArray result = NdArray.of(vec).softMax();
+        float[][] matrix = result.getMatrix();
+        float sum = 0f;
+        for (int j = 0; j < matrix[0].length; j++) {
+            assertTrue(matrix[0][j] >= 0f);
+            sum += matrix[0][j];
+        }
+        assertEquals(1.0f, sum, 1e-6f);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testSoftMaxAxisOutOfBounds() {
+        float[][][] data = new float[][][]{
+                { {1f, 2f}, {3f, 4f} },
+                { {5f, 6f}, {7f, 8f} }
+        };
+        NdArrayCpu cpuInput = (NdArrayCpu) NdArray.of(data);
+        // 3D 的合法轴为 0/1/2，这里传 3 触发异常
+        cpuInput.softMax(3);
     }
 
     @Test

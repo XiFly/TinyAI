@@ -36,7 +36,7 @@ public class ImageProcessor {
      * @return 标准化后的图像
      */
     public static NdArray standardize(NdArray image, double[] mean, double[] std) {
-        int[] shape = image.getShape().getShape();
+        int[] shape = image.getShape().getShapeDims();
         int height = shape[0];
         int width = shape[1];
         int channels = shape[2];
@@ -64,7 +64,7 @@ public class ImageProcessor {
      * @return 调整大小后的图像
      */
     public static NdArray resize(NdArray image, int targetHeight, int targetWidth) {
-        int[] shape = image.getShape().getShape();
+        int[] shape = image.getShape().getShapeDims();
         int srcHeight = shape[0];
         int srcWidth = shape[1];
         int channels = shape[2];
@@ -101,7 +101,7 @@ public class ImageProcessor {
             return image;
         }
 
-        int[] shape = image.getShape().getShape();
+        int[] shape = image.getShape().getShapeDims();
         int height = shape[0];
         int width = shape[1];
         int channels = shape[2];

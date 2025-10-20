@@ -1,4 +1,4 @@
-package io.leavesfly.tinyai.nnet.layer.transformer;
+package io.leavesfly.tinyai.nnet.layer.norm;
 
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
@@ -6,7 +6,6 @@ import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
 import io.leavesfly.tinyai.nnet.Parameter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -63,7 +62,7 @@ public class LayerNorm extends Layer {
      * @param epsilon         防止除零的小常数
      */
     public LayerNorm(String name, int normalizedShape, double epsilon) {
-        super(name, Shape.of(-1, -1, normalizedShape), Shape.of(-1, -1, normalizedShape));
+        super(name);
         this.normalizedShape = normalizedShape;
         this.epsilon = epsilon;
         init();

@@ -94,7 +94,7 @@ public class LazyConv2d extends LazyModule {
         }
 
         Shape inputShape = inputShapes[0];
-        int[] dims = inputShape.getShape();
+        int[] dims = inputShape.getShapeDims();
 
         if (dims.length != 4) {
             throw new IllegalArgumentException(
@@ -136,7 +136,7 @@ public class LazyConv2d extends LazyModule {
         Variable x = inputs[0];
         NdArray inputData = x.getValue();
 
-        int[] dims = inputData.getShape().getShape();
+        int[] dims = inputData.getShape().getShapeDims();
         int batchSize = dims[0];
         int inputHeight = dims[2];
         int inputWidth = dims[3];

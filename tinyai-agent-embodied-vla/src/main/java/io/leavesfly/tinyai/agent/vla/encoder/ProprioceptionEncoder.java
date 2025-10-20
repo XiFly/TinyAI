@@ -5,10 +5,7 @@ import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.nnet.Block;
 import io.leavesfly.tinyai.nnet.layer.dnn.LinearLayer;
-import io.leavesfly.tinyai.nnet.layer.transformer.LayerNorm;
-
-import java.util.ArrayList;
-import java.util.List;
+import io.leavesfly.tinyai.nnet.layer.norm.LayerNorm;
 
 /**
  * 本体感知编码器

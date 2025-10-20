@@ -5,8 +5,8 @@ import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Block;
 import io.leavesfly.tinyai.nnet.block.FeedForward;
-import io.leavesfly.tinyai.nnet.layer.transformer.LayerNorm;
-import io.leavesfly.tinyai.nnet.layer.transformer.MultiHeadAttention;
+import io.leavesfly.tinyai.nnet.layer.norm.LayerNorm;
+import io.leavesfly.tinyai.nnet.layer.transf.MultiHeadAttention;
 
 /**
  * Transformer块实现 - DeepSeek R1的基础Transformer组件

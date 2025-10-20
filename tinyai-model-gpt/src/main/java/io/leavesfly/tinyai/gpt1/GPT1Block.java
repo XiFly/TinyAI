@@ -5,7 +5,7 @@ import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.NdArrayUtil;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Block;
-import io.leavesfly.tinyai.nnet.layer.transformer.LayerNorm;
+import io.leavesfly.tinyai.nnet.layer.norm.LayerNorm;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,7 +1,7 @@
 package io.leavesfly.tinyai.func;
 
 import io.leavesfly.tinyai.ndarr.NdArray;
-import io.leavesfly.tinyai.util.ComputationGraphVisualizer;
+import io.leavesfly.tinyai.util.GraphVisualizer;
 import io.leavesfly.tinyai.util.StepByStepVisualizer;
 
 /**
@@ -49,7 +49,7 @@ public class VisualizationDemo {
 
         // 显示计算图
         System.out.println("📊 计算表达式: z = x + y");
-        ComputationGraphVisualizer.display(z);
+        GraphVisualizer.display(z);
 
         // 执行反向传播并可视化
         System.out.println("🔄 开始反向传播...");
@@ -79,7 +79,7 @@ public class VisualizationDemo {
 
         // 显示计算图
         System.out.println("📊 计算表达式: result = (a + b) * c");
-        ComputationGraphVisualizer.display(result);
+        GraphVisualizer.display(result);
 
         // 重新创建变量用于反向传播演示（因为之前的backward会清空creator）
         Variable a2 = new Variable(NdArray.of(1.0f), "a");
@@ -114,7 +114,7 @@ public class VisualizationDemo {
 
         // 显示计算图
         System.out.println("📊 计算表达式: C = A + B (矩阵加法)");
-        ComputationGraphVisualizer.display(C);
+        GraphVisualizer.display(C);
 
         // 重新创建用于反向传播
         Variable A2 = new Variable(NdArray.of(new float[][]{{1, 2}, {3, 4}}), "A");
@@ -153,7 +153,7 @@ public class VisualizationDemo {
 
         // 显示计算图
         System.out.println("📊 计算表达式: output = sigmoid(input * weight + bias)");
-        ComputationGraphVisualizer.display(output);
+        GraphVisualizer.display(output);
 
         // 重新创建用于反向传播演示
         Variable input2 = new Variable(NdArray.of(new float[]{1.0f, 2.0f}), "input");
@@ -182,7 +182,7 @@ public class VisualizationDemo {
     public static void showUsage() {
         System.out.println("📋 使用说明:");
         System.out.println("------------------------------------");
-        System.out.println("1. ComputationGraphVisualizer.display(variable)");
+        System.out.println("1. GraphVisualizer.display(variable)");
         System.out.println("   - 显示以variable为根节点的计算图结构");
         System.out.println("   - 包括所有变量的名称、形状、数值信息");
         System.out.println("   - 显示函数之间的连接关系");

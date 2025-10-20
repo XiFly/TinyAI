@@ -1,12 +1,12 @@
-package io.leavesfly.tinyai.nnet.layer.transformer;
+package io.leavesfly.tinyai.nnet.block.transf;
 
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
-import io.leavesfly.tinyai.ndarr.Shape;
-import io.leavesfly.tinyai.nnet.Layer;
+import io.leavesfly.tinyai.nnet.Block;
 import io.leavesfly.tinyai.nnet.block.FeedForward;
+import io.leavesfly.tinyai.nnet.layer.norm.LayerNorm;
+import io.leavesfly.tinyai.nnet.layer.transf.MultiHeadAttention;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,7 +20,7 @@ import java.util.List;
  * <p>
  * EncoderLayer(x) = LayerNorm(x + FFN(LayerNorm(x + MultiHead(x))))
  */
-public class TransformerEncoderLayer extends Layer {
+public class TransformerEncoderBlock extends Block {
 
     private MultiHeadAttention selfAttention;
     private LayerNorm layerNorm1;
@@ -29,7 +29,7 @@ public class TransformerEncoderLayer extends Layer {
     private double dropoutRate;
 
 
-    public TransformerEncoderLayer(String name) {
+    public TransformerEncoderBlock(String name) {
         super(name);
     }
 
@@ -42,8 +42,8 @@ public class TransformerEncoderLayer extends Layer {
      * @param dFF         前馈网络隐藏维度
      * @param dropoutRate dropout比率
      */
-    public TransformerEncoderLayer(String name, int dModel, int numHeads, int dFF, double dropoutRate) {
-        super(name, Shape.of(-1, -1, dModel), Shape.of(-1, -1, dModel));
+    public TransformerEncoderBlock(String name, int dModel, int numHeads, int dFF, double dropoutRate) {
+        super(name);
         this.dropoutRate = dropoutRate;
 
         // 初始化各个子层
@@ -58,7 +58,7 @@ public class TransformerEncoderLayer extends Layer {
     /**
      * 使用默认参数的构造函数
      */
-    public TransformerEncoderLayer(String name, int dModel, int numHeads) {
+    public TransformerEncoderBlock(String name, int dModel, int numHeads) {
         this(name, dModel, numHeads, dModel * 4, 0.1);
     }
 

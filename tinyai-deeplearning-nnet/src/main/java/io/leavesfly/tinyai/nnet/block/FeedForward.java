@@ -37,7 +37,7 @@ public class FeedForward extends Block {
      * @param dFF    隐藏层维度（通常是dModel的4倍）
      */
     public FeedForward(String name, int dModel, int dFF) {
-        super(name, Shape.of(-1, -1, dModel), Shape.of(-1, -1, dModel));
+        super(name);
         this.dModel = dModel;
         this.dFF = dFF;
         init();
@@ -57,7 +57,7 @@ public class FeedForward extends Block {
             firstLinear = new LinearLayer(name + "_linear1", dModel, dFF, true);
 
             // ReLU激活函数
-            activation = new ReLuLayer(name + "_relu", Shape.of(-1, -1, dFF));
+            activation = new ReLuLayer(name + "_relu");
 
             // 第二个线性层：dFF -> dModel
             secondLinear = new LinearLayer(name + "_linear2", dFF, dModel, true);

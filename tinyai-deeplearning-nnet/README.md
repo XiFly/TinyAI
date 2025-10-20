@@ -61,12 +61,12 @@ graph TB
 - [`GruLayer`](src/main/java/io/leavesfly/tinyai/nnet/layer/rnn/GruLayer.java) - GRU 门控循环单元
 
 #### Transformer 层 (transformer)
-- [`MultiHeadAttention`](src/main/java/io/leavesfly/tinyai/nnet/layer/transformer/MultiHeadAttention.java) - 多头注意力机制
-- [`LayerNorm`](src/main/java/io/leavesfly/tinyai/nnet/layer/transformer/LayerNorm.java) - 层归一化
-- [`PositionalEncoding`](src/main/java/io/leavesfly/tinyai/nnet/layer/transformer/PositionalEncoding.java) - 位置编码
-- [`FeedForward`](src/main/java/io/leavesfly/tinyai/nnet/layer/transformer/FeedForward.java) - 前馈网络
-- [`TransformerEncoderLayer`](src/main/java/io/leavesfly/tinyai/nnet/layer/transformer/TransformerEncoderLayer.java) - Transformer 编码器层
-- [`TransformerDecoderLayer`](src/main/java/io/leavesfly/tinyai/nnet/layer/transformer/TransformerDecoderLayer.java) - Transformer 解码器层
+- [`MultiHeadAttention`](src/main/java/io/leavesfly/tinyai/nnet/layer/transf/MultiHeadAttention.java) - 多头注意力机制
+- [`LayerNorm`](src/main/java/io/leavesfly/tinyai/nnet/layer/transf/LayerNorm.java) - 层归一化
+- [`PositionalEncoding`](src/main/java/io/leavesfly/tinyai/nnet/layer/transf/PositionalEncoding.java) - 位置编码
+- [`FeedForward`](src/main/java/io/leavesfly/tinyai/nnet/layer/transf/FeedForward.java) - 前馈网络
+- [`TransformerEncoderLayer`](src/main/java/io/leavesfly/tinyai/nnet/layer/transf/TransformerEncoderLayer.java) - Transformer 编码器层
+- [`TransformerDecoderLayer`](src/main/java/io/leavesfly/tinyai/nnet/layer/transf/TransformerDecoderLayer.java) - Transformer 解码器层
 
 #### 嵌入层 (embedd)
 - 词嵌入层实现
@@ -140,16 +140,15 @@ model.init();
 ### 使用 Transformer 组件
 
 ```java
-import io.leavesfly.tinyai.nnet.layer.transformer.MultiHeadAttention;
-import io.leavesfly.tinyai.nnet.layer.transformer.TransformerEncoderLayer;
+
 
 // 创建多头注意力层
-MultiHeadAttention attention = new MultiHeadAttention("mha", 
-                                                      modelDim, numHeads);
+MultiHeadAttention attention=new MultiHeadAttention("mha",
+        modelDim,numHeads);
 
 // 创建 Transformer 编码器层
-TransformerEncoderLayer encoder = new TransformerEncoderLayer("encoder", 
-                                                              modelDim, numHeads, feedForwardDim);
+        TransformerEncoderLayer encoder=new TransformerEncoderLayer("encoder",
+        modelDim,numHeads,feedForwardDim);
 ```
 
 ## 参数管理

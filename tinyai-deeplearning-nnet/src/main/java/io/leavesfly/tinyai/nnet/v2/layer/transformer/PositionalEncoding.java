@@ -112,7 +112,7 @@ public class PositionalEncoding extends Module {
     public Variable forward(Variable... inputs) {
         Variable x = inputs[0];
         NdArray inputData = x.getValue();
-        int[] dims = inputData.getShape().getShape();
+        int[] dims = inputData.getShape().getShapeDims();
 
         // 输入形状检查：(batch_size, seq_len, d_model)
         if (dims.length != 3) {

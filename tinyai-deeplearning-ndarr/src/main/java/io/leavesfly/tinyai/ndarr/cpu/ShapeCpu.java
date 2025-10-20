@@ -216,7 +216,7 @@ public class ShapeCpu implements Serializable, Shape {
     }
 
     @Override
-    public int[] getShape() {
+    public int[] getShapeDims() {
         return dimension;
     }
 }

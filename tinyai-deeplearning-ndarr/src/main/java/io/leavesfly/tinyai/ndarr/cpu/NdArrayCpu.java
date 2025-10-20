@@ -745,37 +745,62 @@ public class NdArrayCpu implements NdArray, Serializable {
      * @throws IllegalArgumentException 当数组不是二维矩阵时抛出
      */
     public NdArrayCpu softMax() {
-        if (this.shape.getDimNum() != 2) {
-            throw new IllegalArgumentException("操作仅适用于二维矩阵");
-        }
-        NdArrayCpu result = new NdArrayCpu(this.shape);
-
-        // 使用数值稳定版本，避免指数爆炸
-        for (int i = 0; i < shape.getRow(); i++) {
-            // 找到该行的最大值用于数值稳定
-            float maxVal = Float.NEGATIVE_INFINITY;
-            for (int j = 0; j < shape.getColumn(); j++) {
-                int index = i * shape.getColumn() + j;
-                maxVal = Math.max(maxVal, this.buffer[index]);
-            }
-
-            // 计算exp和总和
-            float sum = 0f;
-            for (int j = 0; j < shape.getColumn(); j++) {
-                int index = i * shape.getColumn() + j;
-                float expVal = (float) Math.exp(this.buffer[index] - maxVal);
-                result.buffer[index] = expVal;
-                sum += expVal;
-            }
-
-            // 归一化
-            for (int j = 0; j < shape.getColumn(); j++) {
-                int index = i * shape.getColumn() + j;
-                result.buffer[index] /= sum;
-            }
-        }
-        return result;
+        int dimNum = this.shape.getDimNum();
+        int defaultAxis = (dimNum == 1) ? 0 : (dimNum - 1);
+        return softMax(defaultAxis);
     }
+
+
+    /**
+     * Softmax函数运算，沿指定 axis 计算概率分布
+     *
+     * <p>使用数值稳定版本实现：先减去该轴上的最大值，再进行 exp 和归一化</p>
+     *
+     * @param axis 计算 softmax 的维度，支持负轴（-1 表示最后一维）
+     * @return Softmax运算结果数组
+     * @throws IllegalArgumentException 当 axis 越界时抛出
+     */
+    public NdArrayCpu softMax(int axis) {
+        int dimNum = this.shape.getDimNum();
+        int normalizedAxis = axis < 0 ? axis + dimNum : axis;
+        if (normalizedAxis < 0 || normalizedAxis >= dimNum) {
+            throw new IllegalArgumentException(
+                    String.format("轴参数越界: %d，应在 [0, %d) 之间", axis, dimNum)
+            );
+        }
+
+        // 1) 按 axis 求最大值（数值稳定）
+        NdArrayCpu maxReduced = this.axisOperation(normalizedAxis, data -> {
+            float m = Float.NEGATIVE_INFINITY;
+            for (float v : data) {
+                if (v > m) m = v;
+            }
+            return m;
+        }, "max");
+
+        // 2) keepdims（在 axis 位置插入 1），再广播回原形状
+        int[] keepDims = new int[dimNum];
+        for (int i = 0; i < dimNum; i++) {
+            keepDims[i] = this.shape.getDimension(i);
+        }
+        keepDims[normalizedAxis] = 1;
+
+        NdArrayCpu maxKeep = maxReduced.reshape(ShapeCpu.of(keepDims));
+        NdArrayCpu maxBroadcast = maxKeep.broadcastTo(this.shape);
+
+        // 3) 计算 exp(x - max)
+        NdArrayCpu shifted = this.sub(maxBroadcast);
+        NdArrayCpu expValues = shifted.exp();
+
+        // 4) 沿 axis 求和，并 keepdims + 广播回原形状（加 EPSILON 防止除零）
+        NdArrayCpu sumReduced = expValues.sum(normalizedAxis);
+        NdArrayCpu sumKeep = sumReduced.reshape(ShapeCpu.of(keepDims));
+        NdArrayCpu sumBroadcast = sumKeep.broadcastTo(this.shape).maximum(EPSILON);
+
+        // 5) 归一化
+        return (NdArrayCpu) expValues.div(sumBroadcast);
+    }
+
 
     /**
      * 元素级最大值运算，将数组中小于指定值的元素替换为该值

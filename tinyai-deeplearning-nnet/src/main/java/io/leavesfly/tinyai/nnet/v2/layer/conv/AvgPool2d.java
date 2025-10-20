@@ -90,7 +90,7 @@ public class AvgPool2d extends Module {
         NdArray inputData = x.getValue();
 
         // 检查输入形状
-        int[] dims = inputData.getShape().getShape();
+        int[] dims = inputData.getShape().getShapeDims();
         if (dims.length != 4) {
             throw new IllegalArgumentException(
                     String.format("Expected 4D input (batch, channels, height, width), but got %dD", dims.length));

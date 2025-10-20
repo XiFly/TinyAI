@@ -2,11 +2,10 @@ package io.leavesfly.tinyai.gpt1;
 
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
-import io.leavesfly.tinyai.ndarr.Shape;
-import io.leavesfly.tinyai.nnet.Layer;
+import io.leavesfly.tinyai.nnet.Block;
 import io.leavesfly.tinyai.nnet.block.FeedForward;
-import io.leavesfly.tinyai.nnet.layer.transformer.LayerNorm;
-import io.leavesfly.tinyai.nnet.layer.transformer.MultiHeadAttention;
+import io.leavesfly.tinyai.nnet.layer.norm.LayerNorm;
+import io.leavesfly.tinyai.nnet.layer.transf.MultiHeadAttention;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +27,7 @@ import java.util.List;
  * @author 山泽
  * @version 1.0
  */
-public class GPT1TransformerBlock extends Layer {
+public class GPT1TransformerBlock extends Block {
 
     /**
      * 多头自注意力层

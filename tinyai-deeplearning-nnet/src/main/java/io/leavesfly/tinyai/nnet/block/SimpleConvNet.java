@@ -5,8 +5,8 @@ import io.leavesfly.tinyai.nnet.LayerAble;
 import io.leavesfly.tinyai.nnet.layer.activate.ReLuLayer;
 import io.leavesfly.tinyai.nnet.layer.cnn.ConvLayer;
 import io.leavesfly.tinyai.nnet.layer.cnn.PoolingLayer;
-import io.leavesfly.tinyai.nnet.layer.dnn.AffineLayer;
-import io.leavesfly.tinyai.nnet.layer.norm.BatchNorm;
+import io.leavesfly.tinyai.nnet.layer.dnn.LinearLayer;
+import io.leavesfly.tinyai.nnet.layer.norm.LayerNorm;
 import io.leavesfly.tinyai.nnet.layer.norm.Dropout;
 import io.leavesfly.tinyai.nnet.layer.norm.Flatten;
 
@@ -61,7 +61,7 @@ public class SimpleConvNet extends SequentialBlock {
      */
     public SimpleConvNet(String _name, Shape _xInputShape, int numClasses,
                          boolean useBatchNorm, float dropoutRate) {
-        super(_name, _xInputShape, Shape.of(-1, numClasses));
+        super(_name);
 
         this.numClasses = numClasses;
         this.useBatchNorm = useBatchNorm;
@@ -108,7 +108,7 @@ public class SimpleConvNet extends SequentialBlock {
         addFullyConnectedBlock("fc2", 512, 256);
 
         // 输出层 (不使用激活函数)
-        addLayer(new AffineLayer("output", Shape.of(-1, 256), numClasses, true));
+        addLayer(new LinearLayer("output", 256, numClasses, true));
     }
 
     /**
@@ -122,7 +122,7 @@ public class SimpleConvNet extends SequentialBlock {
 
         // 批量归一化层（可选）
         if (useBatchNorm) {
-            addLayer(new BatchNorm(prefix + "_bn", null, outChannels));
+            addLayer(new LayerNorm(prefix + "_bn", outChannels));
         }
 
         // ReLU激活函数
@@ -142,11 +142,11 @@ public class SimpleConvNet extends SequentialBlock {
      */
     private void addFullyConnectedBlock(String prefix, int inputSize, int outputSize) {
         // 全连接层
-        addLayer(new AffineLayer(prefix + "_linear", Shape.of(-1, inputSize), outputSize, true));
+        addLayer(new LinearLayer(prefix + "_linear", inputSize, outputSize, true));
 
         // 批量归一化层（可选）
         if (useBatchNorm) {
-            addLayer(new BatchNorm(prefix + "_bn", null, outputSize));
+            addLayer(new LayerNorm(prefix + "_bn", outputSize));
         }
 
         // ReLU激活函数
@@ -283,7 +283,7 @@ public class SimpleConvNet extends SequentialBlock {
      */
     public static SimpleConvNet buildMnistConvNet() {
         // MNIST图像: 28x28 灰度图像，10个类别
-        Shape inputShape = Shape.of(-1, 1, 28, 28);
+        Shape inputShape = Shape.of(100, 1, 28, 28);
         int numClasses = 10;
 
         SimpleConvNet convNet = new SimpleConvNet("MnistConvNet", inputShape, numClasses, true, 0.3f);
@@ -300,7 +300,7 @@ public class SimpleConvNet extends SequentialBlock {
      */
     public static SimpleConvNet buildCifar10ConvNet() {
         // CIFAR-10图像: 32x32 RGB图像，10个类别
-        Shape inputShape = Shape.of(-1, 3, 32, 32);
+        Shape inputShape = Shape.of(100, 3, 32, 32);
         int numClasses = 10;
 
         SimpleConvNet convNet = new SimpleConvNet("Cifar10ConvNet", inputShape, numClasses, true, 0.4f);
@@ -320,9 +320,10 @@ public class SimpleConvNet extends SequentialBlock {
      * @param numClasses 输出类别数
      * @return 配置好的SimpleConvNet实例
      */
-    public static SimpleConvNet buildCustomConvNet(String name, int channels,
+    public static SimpleConvNet buildCustomConvNet(String name, int batch, int channels,
                                                    int height, int width, int numClasses) {
-        Shape inputShape = Shape.of(-1, channels, height, width);
+
+        Shape inputShape = Shape.of(batch, channels, height, width);
 
         // 根据输入尺寸调整dropout率
         float dropoutRate = height > 64 ? 0.5f : 0.3f;

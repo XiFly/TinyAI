@@ -206,7 +206,7 @@ public class TransformerEncoderLayer extends Module {
 
     @Override
     public String toString() {
-        return "TransformerEncoderLayer{" +
+        return "TransformerEncoderBlock{" +
                 "name='" + name + '\'' +
                 ", dModel=" + dModel +
                 ", numHeads=" + numHeads +

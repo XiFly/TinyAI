@@ -94,7 +94,8 @@ public class Model implements Serializable {
      * @param modelFile 模型文件
      */
     public void save(File modelFile) {
-        try (FileOutputStream fileOut = new FileOutputStream(modelFile); ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+        try (FileOutputStream fileOut = new FileOutputStream(modelFile);
+             ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
             out.writeObject(this);
         } catch (Exception e) {
             throw new RuntimeException("Model save error!");
@@ -154,7 +155,8 @@ public class Model implements Serializable {
      * @return 加载的模型
      */
     public static Model load(File modelFile) {
-        try (FileInputStream fileIn = new FileInputStream(modelFile); ObjectInputStream in = new ObjectInputStream(fileIn)) {
+        try (FileInputStream fileIn = new FileInputStream(modelFile);
+             ObjectInputStream in = new ObjectInputStream(fileIn)) {
             return (Model) in.readObject();
         } catch (Exception e) {
             throw new RuntimeException("model load error!");

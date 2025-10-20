@@ -13,6 +13,7 @@ import io.leavesfly.tinyai.rl.policy.EpsilonGreedyPolicy;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.block.MlpBlock;
+import io.leavesfly.tinyai.util.Config;
 
 /**
  * Deep Q-Network (DQN) 智能体实现
@@ -106,7 +107,7 @@ public class DQNAgent extends Agent {
         MlpBlock mlpBlock = new MlpBlock(
                 name + "_QNetwork",
                 1, // batchSize
-                null, // inputShape (will be set automatically)
+                Config.ActiveFunc.ReLU,
                 allSizes
         );
 

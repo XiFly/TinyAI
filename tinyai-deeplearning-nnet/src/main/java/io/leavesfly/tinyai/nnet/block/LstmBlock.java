@@ -41,9 +41,10 @@ public class LstmBlock extends Block {
      * @param outputSize 输出维度
      */
     public LstmBlock(String name, int inputSize, int hiddenSize, int outputSize) {
-        super(name, Shape.of(-1, inputSize), Shape.of(-1, outputSize));
 
-        lstmLayer = new SimpleRnnLayer("lstm", Shape.of(-1, inputSize), Shape.of(-1, hiddenSize));
+        super(name);
+        
+        lstmLayer = new SimpleRnnLayer("lstm");
         addLayer(lstmLayer);
 
         linearLayer = new LinearLayer("line", hiddenSize, outputSize, true);

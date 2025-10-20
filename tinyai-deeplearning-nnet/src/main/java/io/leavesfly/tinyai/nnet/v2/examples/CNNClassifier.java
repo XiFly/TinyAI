@@ -124,7 +124,7 @@ public class CNNClassifier {
          */
         private Variable flatten(Variable x) {
             NdArray data = x.getValue();
-            int[] shape = data.getShape().getShape();
+            int[] shape = data.getShape().getShapeDims();
 
             if (shape.length != 4) {
                 throw new IllegalArgumentException("Expected 4D input, got " + shape.length + "D");
@@ -235,7 +235,7 @@ public class CNNClassifier {
     }
 
     private static String shapeToString(Shape shape) {
-        int[] dims = shape.getShape();
+        int[] dims = shape.getShapeDims();
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < dims.length; i++) {
             if (i > 0) sb.append(", ");

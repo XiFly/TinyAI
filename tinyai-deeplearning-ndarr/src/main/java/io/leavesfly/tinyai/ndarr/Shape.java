@@ -19,7 +19,7 @@ public interface Shape {
      *
      * @return
      */
-    int[] getShape();
+    int[] getShapeDims();
 
     /**
      * 获取行数（仅适用于二维形状）

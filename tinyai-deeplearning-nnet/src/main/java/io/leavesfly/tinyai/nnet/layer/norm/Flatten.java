@@ -50,7 +50,7 @@ public class Flatten extends Layer {
     private static Shape calculateOutputShape(Shape inputShape) {
         // 处理null或空形状
         if (inputShape == null || inputShape.getDimNum() == 0) {
-            return Shape.of(-1, 1);
+            return Shape.of(1, 1);
         }
 
         // 如果输入是一维的

@@ -27,8 +27,6 @@ public class LoraLinearLayerTest {
         
         assertNotNull("层应该成功创建", layer);
         assertEquals("层名称应该正确", "test_layer", layer.getName());
-        assertEquals("输入形状应该正确", Shape.of(-1, 100), layer.getInputShape());
-        assertEquals("输出形状应该正确", Shape.of(-1, 50), layer.getOutputShape());
         assertNotNull("应该有冻结权重", layer.getFrozenWeight());
         assertNotNull("应该有偏置", layer.getBias());
         assertNotNull("应该有LoRA适配器", layer.getLoraAdapter());

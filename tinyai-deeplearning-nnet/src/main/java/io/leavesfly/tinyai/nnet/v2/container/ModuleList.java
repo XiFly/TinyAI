@@ -17,14 +17,14 @@ import java.util.List;
  * - 需要灵活组合模块的场景
  * - 重复的层结构（如Transformer的多个Encoder层）
  * - 需要在forward中动态选择模块
- *
+ * <p>
  * 使用示例：
  * <pre>
  * ModuleList layers = new ModuleList("layers");
  * for (int i = 0; i < 6; i++) {
- *     layers.add(new TransformerEncoderLayer("layer" + i, ...));
+ *     layers.add(new TransformerEncoderBlock("layer" + i, ...));
  * }
- * 
+ *
  * // 在forward中使用
  * Variable x = input;
  * for (int i = 0; i < layers.size(); i++) {
@@ -99,11 +99,11 @@ public class ModuleList extends Module implements Iterable<Module> {
         }
 
         Module oldModule = moduleList.set(index, module);
-        
+
         // 更新注册
         String moduleName = String.valueOf(index);
         _modules.put(moduleName, module);
-        module.set_parent(this);
+        module.setParent(this);
 
         return oldModule;
     }
@@ -148,7 +148,7 @@ public class ModuleList extends Module implements Iterable<Module> {
     public Variable forward(Variable... inputs) {
         throw new UnsupportedOperationException(
                 "ModuleList does not define forward(). " +
-                "Use modules individually in your custom forward() method.");
+                        "Use modules individually in your custom forward() method.");
     }
 
     @Override

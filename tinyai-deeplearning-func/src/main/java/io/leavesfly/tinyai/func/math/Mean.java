@@ -44,7 +44,7 @@ public class Mean extends Function {
     @Override
     public NdArray forward(NdArray... inputs) {
         inputShape = inputs[0].getShape();
-        int[] shape = inputShape.getShape();
+        int[] shape = inputShape.getShapeDims();
         
         // 处理负数轴索引
         int actualAxis = axis;

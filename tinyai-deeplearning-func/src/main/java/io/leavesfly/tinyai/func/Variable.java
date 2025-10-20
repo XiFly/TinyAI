@@ -57,7 +57,7 @@ public class Variable implements Serializable {
      * 是否需要计算当前变量的梯度
      * 当设置为false时，反向传播过程中不会计算和存储该变量的梯度
      */
-    private boolean requireGrad = true;
+    protected boolean requireGrad = true;
 
     /**
      * 构造函数

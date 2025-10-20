@@ -39,9 +39,9 @@ public class SimpleRnnBlock extends Block {
      * @param outputSize 输出维度
      */
     public SimpleRnnBlock(String name, int inputSize, int hiddenSize, int outputSize) {
-        super(name, Shape.of(-1, inputSize), Shape.of(-1, outputSize));
+        super(name);
 
-        rnnLayer = new SimpleRnnLayer("rnn", Shape.of(-1, inputSize), Shape.of(-1, hiddenSize));
+        rnnLayer = new SimpleRnnLayer("rnn");
 
         addLayer(rnnLayer);
 

@@ -4,8 +4,8 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.layer.transformer.LayerNorm;
-import io.leavesfly.tinyai.nnet.layer.transformer.MultiHeadAttention;
+import io.leavesfly.tinyai.nnet.layer.norm.LayerNorm;
+import io.leavesfly.tinyai.nnet.layer.transf.MultiHeadAttention;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +65,7 @@ public class MoETransformerBlock extends Layer {
     public MoETransformerBlock(String name, int dModel, int numHeads, int numExperts,
                                int dExpert, int topK, double dropoutRate,
                                boolean useNoise, double noiseEpsilon) {
-        super(name, Shape.of(-1, -1, dModel), Shape.of(-1, -1, dModel));
+        super(name);
         
         if (dModel <= 0 || numHeads <= 0 || numExperts <= 0) {
             throw new IllegalArgumentException("dModel, numHeads和numExperts必须大于0");

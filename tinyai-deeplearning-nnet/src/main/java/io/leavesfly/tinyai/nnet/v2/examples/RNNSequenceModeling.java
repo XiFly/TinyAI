@@ -45,7 +45,7 @@ public class RNNSequenceModeling {
             lstm.resetState();
 
             // 处理序列
-            int[] shape = x.getValue().getShape().getShape();
+            int[] shape = x.getValue().getShape().getShapeDims();
             int seqLen = shape[0];
             int batchSize = shape[1];
             int inputSize = shape[2];
@@ -104,7 +104,7 @@ public class RNNSequenceModeling {
 
             gru.resetState();
 
-            int[] shape = x.getValue().getShape().getShape();
+            int[] shape = x.getValue().getShape().getShapeDims();
             int seqLen = shape[0];
             int batchSize = shape[1];
             int inputSize = shape[2];
@@ -158,7 +158,7 @@ public class RNNSequenceModeling {
 
             rnn.resetState();
 
-            int[] shape = x.getValue().getShape().getShape();
+            int[] shape = x.getValue().getShape().getShapeDims();
             int seqLen = shape[0];
             int batchSize = shape[1];
             int inputSize = shape[2];
@@ -308,7 +308,7 @@ public class RNNSequenceModeling {
     }
 
     private static String shapeToString(Shape shape) {
-        int[] dims = shape.getShape();
+        int[] dims = shape.getShapeDims();
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < dims.length; i++) {
             if (i > 0) sb.append(", ");

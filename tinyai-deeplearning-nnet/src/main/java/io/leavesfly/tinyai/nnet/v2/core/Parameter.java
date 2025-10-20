@@ -14,10 +14,6 @@ import io.leavesfly.tinyai.ndarr.NdArray;
  */
 public class Parameter extends Variable {
 
-    /**
-     * 是否需要计算梯度
-     */
-    private boolean requiresGrad;
 
     /**
      * 构造函数，使用指定的NdArray值创建Parameter实例
@@ -37,7 +33,7 @@ public class Parameter extends Variable {
      */
     public Parameter(NdArray value, boolean requiresGrad) {
         super(value);
-        this.requiresGrad = requiresGrad;
+        this.requireGrad = requiresGrad;
     }
 
     /**
@@ -73,7 +69,7 @@ public class Parameter extends Variable {
      * @return true表示需要计算梯度
      */
     public boolean requiresGrad() {
-        return requiresGrad;
+        return requireGrad;
     }
 
     /**
@@ -82,7 +78,7 @@ public class Parameter extends Variable {
      * @param requiresGrad 是否需要计算梯度
      */
     public void setRequiresGrad(boolean requiresGrad) {
-        this.requiresGrad = requiresGrad;
+        this.requireGrad = requiresGrad;
     }
 
     /**
@@ -97,7 +93,7 @@ public class Parameter extends Variable {
     public String toString() {
         return "Parameter{" +
                 "data=" + (getValue() != null ? getValue().getShape() : "null") +
-                ", requiresGrad=" + requiresGrad +
+                ", requiresGrad=" + requireGrad +
                 ", hasGrad=" + (getGrad() != null) +
                 '}';
     }

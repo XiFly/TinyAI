@@ -15,7 +15,7 @@ import java.util.*;
  * @author 山泽
  * @version 1.0
  */
-public class ComputationGraphVisualizer {
+public class GraphVisualizer {
     
     /**
      * 显示以指定变量为根节点的计算图

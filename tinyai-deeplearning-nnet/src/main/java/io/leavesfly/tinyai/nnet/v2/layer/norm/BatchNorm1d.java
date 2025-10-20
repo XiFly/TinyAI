@@ -139,7 +139,7 @@ public class BatchNorm1d extends Module {
     public Variable forward(Variable... inputs) {
         Variable x = inputs[0];
         NdArray inputData = x.getValue();
-        int[] dims = inputData.getShape().getShape();
+        int[] dims = inputData.getShape().getShapeDims();
 
         // 输入形状检查：(batch_size, num_features) 或 (batch_size, num_features, length)
         if (dims.length < 2 || dims[1] != numFeatures) {

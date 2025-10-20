@@ -6,7 +6,7 @@ import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Block;
 import io.leavesfly.tinyai.nnet.Parameter;
 import io.leavesfly.tinyai.nnet.layer.dnn.LinearLayer;
-import io.leavesfly.tinyai.nnet.layer.transformer.LayerNorm;
+import io.leavesfly.tinyai.nnet.layer.norm.LayerNorm;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -71,9 +71,7 @@ public class GPT2TokenEmbedding extends Layer {
     public GPT2TokenEmbedding(String name, int vocabSize, int nEmbd, 
                              int nPositions, boolean usePositionEmbedding, 
                              double dropoutProb) {
-        super(name, 
-              Shape.of(-1, nPositions), 
-              Shape.of(-1, nPositions, nEmbd));
+        super(name);
         
         this.vocabSize = vocabSize;
         this.nEmbd = nEmbd;

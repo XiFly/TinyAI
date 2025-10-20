@@ -221,7 +221,7 @@ public class TransformerDecoderLayer extends Module {
 
     @Override
     public String toString() {
-        return "TransformerDecoderLayer{" +
+        return "TransformerDecoderBlock{" +
                 "name='" + name + '\'' +
                 ", dModel=" + dModel +
                 ", numHeads=" + numHeads +

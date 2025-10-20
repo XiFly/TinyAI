@@ -1,4 +1,4 @@
-package io.leavesfly.tinyai.nnet.layer.transformer;
+package io.leavesfly.tinyai.nnet.layer.transf;
 
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
@@ -43,7 +43,7 @@ public class MultiHeadAttention extends Layer {
      * @param useMask  是否使用掩码（解码器中需要）
      */
     public MultiHeadAttention(String name, int dModel, int numHeads, boolean useMask) {
-        super(name, Shape.of(-1, -1, dModel), Shape.of(-1, -1, dModel));
+        super(name);
 
         if (dModel % numHeads != 0) {
             throw new IllegalArgumentException("dModel must be divisible by numHeads");
@@ -262,7 +262,7 @@ public class MultiHeadAttention extends Layer {
         for (int i = 0; i < inputs.length; i++) {
             variables[i] = new Variable(inputs[i]);
         }
-        return layerForward(variables).getValue();
+        return layerForward0(variables).getValue();
     }
 
     @Override

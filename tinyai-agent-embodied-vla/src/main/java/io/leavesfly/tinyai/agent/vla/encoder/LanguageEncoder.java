@@ -7,7 +7,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.nnet.Block;
 import io.leavesfly.tinyai.nnet.layer.dnn.LinearLayer;
 import io.leavesfly.tinyai.nnet.layer.embedd.Embedding;
-import io.leavesfly.tinyai.nnet.layer.transformer.LayerNorm;
+import io.leavesfly.tinyai.nnet.layer.norm.LayerNorm;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -188,7 +188,7 @@ public class LanguageEncoder extends Block {
         private LayerNorm norm2;
         
         public TransformerEncoderLayer(int hiddenDim, int numHeads) {
-            super("TransformerEncoderLayer", null);
+            super("TransformerEncoderBlock", null);
             this.hiddenDim = hiddenDim;
             this.numHeads = numHeads;
             
