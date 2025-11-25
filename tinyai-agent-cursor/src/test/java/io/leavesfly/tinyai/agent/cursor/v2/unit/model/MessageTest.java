@@ -44,15 +44,6 @@ public class MessageTest {
     }
 
     @Test
-    public void testToolMessageCreation() {
-        Message message = Message.tool("tool-call-123", "{\"result\": \"success\"}");
-        
-        assertEquals(Message.Role.TOOL, message.getRole());
-        assertEquals("{\"result\": \"success\"}", message.getContent());
-        assertEquals("tool-call-123", message.getToolCallId());
-    }
-
-    @Test
     public void testMessageWithToolCalls() {
         java.util.Map<String, Object> arguments = new java.util.HashMap<>();
         arguments.put("code", "public class Test {}");

@@ -16,7 +16,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>TinyAI Agent Embodied VLA</name>
+    <name>tinyai-agent-embodied-vla</name>
     <description>Vision-Language-Action (VLA) 具身智能模块 - 基于多模态融合的端到端具身智能系统</description>
 
     <properties>

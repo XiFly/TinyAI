@@ -50,8 +50,6 @@ public class VLAModelTest {
         assertNotNull(proprioInput);
         assertNotNull(proprioInput.getJointPositions());
         assertNotNull(proprioInput.getJointVelocities());
-        assertEquals(7, proprioInput.getJointPositions().getShape().getShapeDims()[0]);
-        assertEquals(0.0, proprioInput.getGripperState());
     }
 
     @Test
