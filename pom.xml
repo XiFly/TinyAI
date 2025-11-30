@@ -38,10 +38,10 @@
         <module>tinyai-agent/tinyai-agent-research</module>
 
         <!--        具身智能-->
-        <module>tinyai-embodied/tinyai-agent-embodied</module>
-        <module>tinyai-embodied/tinyai-agent-embodied-robot</module>
-        <module>tinyai-embodied/tinyai-agent-embodied-vla</module>
-        <module>tinyai-embodied/tinyai-agent-embodied-wm</module>
+        <module>tinyai-embodied/tinyai-embodied</module>
+        <module>tinyai-embodied/tinyai-embodied-robot</module>
+        <module>tinyai-embodied/tinyai-embodied-vla</module>
+        <module>tinyai-embodied/tinyai-embodied-wm</module>
     </modules>
 
     <properties>

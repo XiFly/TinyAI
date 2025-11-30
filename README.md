@@ -204,10 +204,10 @@ mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.agent.evol.EvolDemo" -pl tin
 mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.agent.multi.MultiAgentDemo" -pl tinyai-agent-multi
 
 # 具身智能（自动驾驶）演示
-mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.agent.embodied.AgentDemo" -pl tinyai-agent-embodied
+mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.embodied.AgentDemo" -pl tinyai-agent-embodied
 
 # 扫地机器人演示
-mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.agent.robot.SimpleDemo" -pl tinyai-agent-embodied-robot
+mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.robot.SimpleDemo" -pl tinyai-agent-embodied-robot
 
 # AI编程助手演示
 mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.agent.cursor.CursorDemo" -pl tinyai-agent-cursor
