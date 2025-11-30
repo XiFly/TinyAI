@@ -2,7 +2,7 @@ package io.leavesfly.tinyai.wm;
 
 import io.leavesfly.tinyai.wm.core.WorldModel;
 import io.leavesfly.tinyai.wm.env.Environment;
-import io.leavesfly.tinyai.agent.wm.model.*;
+
 import io.leavesfly.tinyai.wm.model.*;
 
 /**

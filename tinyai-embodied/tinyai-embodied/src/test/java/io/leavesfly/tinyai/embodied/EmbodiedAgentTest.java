@@ -1,7 +1,6 @@
 package io.leavesfly.tinyai.embodied;
 
 import io.leavesfly.tinyai.embodied.env.EnvironmentConfig;
-import io.leavesfly.tinyai.agent.embodied.model.*;
 import io.leavesfly.tinyai.embodied.model.Episode;
 import io.leavesfly.tinyai.embodied.model.PerceptionState;
 import io.leavesfly.tinyai.embodied.model.ScenarioType;

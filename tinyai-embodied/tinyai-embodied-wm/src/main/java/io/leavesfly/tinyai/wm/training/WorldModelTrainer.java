@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.wm.WorldModelAgent;
 import io.leavesfly.tinyai.wm.core.MDNRNN;
 import io.leavesfly.tinyai.wm.core.VAEEncoder;
 import io.leavesfly.tinyai.wm.core.WorldModel;
-import io.leavesfly.tinyai.agent.wm.model.*;
+
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.wm.model.*;
 

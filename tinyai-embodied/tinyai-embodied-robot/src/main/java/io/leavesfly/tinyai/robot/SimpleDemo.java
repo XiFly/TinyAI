@@ -1,7 +1,5 @@
 package io.leavesfly.tinyai.robot;
 
-import io.leavesfly.tinyai.agent.robot.env.*;
-import io.leavesfly.tinyai.agent.robot.model.*;
 import io.leavesfly.tinyai.robot.env.CleaningEnvironment;
 import io.leavesfly.tinyai.robot.env.EnvironmentConfig;
 import io.leavesfly.tinyai.robot.env.SimpleCleaningEnv;

@@ -1,6 +1,6 @@
 package io.leavesfly.tinyai.vla;
 
-import io.leavesfly.tinyai.agent.vla.model.*;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

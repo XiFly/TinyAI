@@ -1,6 +1,6 @@
 package io.leavesfly.tinyai.vla;
 
-import io.leavesfly.tinyai.agent.vla.model.*;
+
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.vla.model.*;
 import org.junit.jupiter.api.Test;

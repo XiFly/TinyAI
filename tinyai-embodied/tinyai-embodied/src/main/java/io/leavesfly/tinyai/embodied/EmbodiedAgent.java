@@ -5,7 +5,7 @@ import io.leavesfly.tinyai.embodied.env.DrivingEnvironment;
 import io.leavesfly.tinyai.embodied.env.EnvironmentConfig;
 import io.leavesfly.tinyai.embodied.env.impl.SimpleDrivingEnv;
 import io.leavesfly.tinyai.embodied.execution.ExecutionModule;
-import io.leavesfly.tinyai.agent.embodied.model.*;
+
 import io.leavesfly.tinyai.embodied.perception.PerceptionModule;
 import io.leavesfly.tinyai.embodied.sensor.SensorSuite;
 import io.leavesfly.tinyai.embodied.model.*;

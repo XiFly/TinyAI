@@ -1,6 +1,5 @@
 package io.leavesfly.tinyai.wm.core;
 
-import io.leavesfly.tinyai.agent.wm.model.*;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.wm.model.*;

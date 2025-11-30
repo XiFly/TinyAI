@@ -7,7 +7,7 @@ import io.leavesfly.tinyai.vla.encoder.ProprioceptionEncoder;
 import io.leavesfly.tinyai.vla.encoder.VisionEncoder;
 import io.leavesfly.tinyai.vla.fusion.CrossModalAttention;
 import io.leavesfly.tinyai.vla.fusion.VLATransformerCore;
-import io.leavesfly.tinyai.agent.vla.model.*;
+
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.vla.model.VLAAction;
