@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Block;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import io.leavesfly.tinyai.nnet.layer.dnn.LinearLayer;
 import io.leavesfly.tinyai.nnet.layer.norm.LayerNorm;
 
@@ -40,8 +40,8 @@ public class DeepSeekV3Block extends Block {
     private final float dropout;
     
     // 嵌入层
-    private Parameter tokenEmbedding;
-    private Parameter positionEmbedding;
+    private ParameterV1 tokenEmbedding;
+    private ParameterV1 positionEmbedding;
     
     // V3 Transformer层
     private List<V3TransformerBlock> transformerLayers;
@@ -118,14 +118,14 @@ public class DeepSeekV3Block extends Block {
         // Token嵌入 - 使用Xavier初始化
         NdArray tokenEmbeddingData = NdArray.likeRandomN(Shape.of(vocabSize, dModel))
                                           .mulNum(Math.sqrt(1.0 / dModel));
-        tokenEmbedding = new Parameter(tokenEmbeddingData);
+        tokenEmbedding = new ParameterV1(tokenEmbeddingData);
         tokenEmbedding.setName(name + "_token_embedding");
         addParam(tokenEmbedding.getName(), tokenEmbedding);
         
         // 位置嵌入
         NdArray positionEmbeddingData = NdArray.likeRandomN(Shape.of(maxSeqLen, dModel))
                                              .mulNum(Math.sqrt(1.0 / dModel));
-        positionEmbedding = new Parameter(positionEmbeddingData);
+        positionEmbedding = new ParameterV1(positionEmbeddingData);
         positionEmbedding.setName(name + "_position_embedding");
         addParam(positionEmbedding.getName(), positionEmbedding);
     }

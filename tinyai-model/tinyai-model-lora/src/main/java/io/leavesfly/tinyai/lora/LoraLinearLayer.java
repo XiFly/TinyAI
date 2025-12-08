@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,13 +31,13 @@ public class LoraLinearLayer extends Layer {
      * 冻结的预训练权重矩阵
      * 形状: (input_dim, output_dim)
      */
-    private final Parameter frozenWeight;
+    private final ParameterV1 frozenWeight;
 
     /**
      * 偏置参数（可选）
      * 形状: (1, output_dim)
      */
-    private final Parameter bias;
+    private final ParameterV1 bias;
 
     /**
      * LoRA适配器
@@ -74,14 +74,14 @@ public class LoraLinearLayer extends Layer {
         // 初始化原始权重矩阵（可以是预训练的权重）
         NdArray initWeight = NdArray.likeRandomN(Shape.of(inputDim, outputDim))
                 .mulNum(Math.sqrt(2.0 / (inputDim + outputDim))); // Xavier初始化
-        this.frozenWeight = new Parameter(initWeight);
+        this.frozenWeight = new ParameterV1(initWeight);
         this.frozenWeight.setName("frozen_weight");
         this.frozenWeight.setRequireGrad(false); // 冻结权重
         addParam(this.frozenWeight.getName(), this.frozenWeight);
 
         // 初始化偏置项
         if (needBias) {
-            this.bias = new Parameter(NdArray.zeros(Shape.of(1, outputDim)));
+            this.bias = new ParameterV1(NdArray.zeros(Shape.of(1, outputDim)));
             this.bias.setName("bias");
             this.bias.setRequireGrad(!config.isEnableBias()); // 根据配置决定是否训练偏置
             addParam(this.bias.getName(), this.bias);
@@ -117,14 +117,14 @@ public class LoraLinearLayer extends Layer {
         config.validate(inputDim, outputDim);
 
         // 使用预训练权重并冻结
-        this.frozenWeight = new Parameter(pretrainedWeight);
+        this.frozenWeight = new ParameterV1(pretrainedWeight);
         this.frozenWeight.setName("frozen_weight");
         this.frozenWeight.setRequireGrad(false);
         addParam(this.frozenWeight.getName(), this.frozenWeight);
 
         // 处理偏置项
         if (pretrainedBias != null) {
-            this.bias = new Parameter(pretrainedBias);
+            this.bias = new ParameterV1(pretrainedBias);
             this.bias.setName("bias");
             this.bias.setRequireGrad(config.isEnableBias());
             addParam(this.bias.getName(), this.bias);
@@ -313,7 +313,7 @@ public class LoraLinearLayer extends Layer {
      *
      * @return 冻结权重参数
      */
-    public Parameter getFrozenWeight() {
+    public ParameterV1 getFrozenWeight() {
         return frozenWeight;
     }
 
@@ -322,7 +322,7 @@ public class LoraLinearLayer extends Layer {
      *
      * @return 偏置参数（可能为null）
      */
-    public Parameter getBias() {
+    public ParameterV1 getBias() {
         return bias;
     }
 
@@ -331,8 +331,8 @@ public class LoraLinearLayer extends Layer {
      *
      * @return LoRA参数映射
      */
-    public Map<String, Parameter> getLoraParameters() {
-        Map<String, Parameter> loraParams = new HashMap<>();
+    public Map<String, ParameterV1> getLoraParameters() {
+        Map<String, ParameterV1> loraParams = new HashMap<>();
         loraParams.put(getName() + ".lora_A", loraAdapter.getMatrixA());
         loraParams.put(getName() + ".lora_B", loraAdapter.getMatrixB());
         return loraParams;

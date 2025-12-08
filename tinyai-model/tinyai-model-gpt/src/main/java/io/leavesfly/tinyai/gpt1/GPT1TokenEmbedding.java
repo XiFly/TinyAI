@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +26,10 @@ import java.util.List;
 public class GPT1TokenEmbedding extends Layer {
     
     /** Token嵌入参数矩阵 (vocabSize, hiddenSize) */
-    private Parameter tokenEmbedding;
+    private ParameterV1 tokenEmbedding;
     
     /** 位置嵌入参数矩阵 (maxSequenceLength, hiddenSize) */
-    private Parameter positionEmbedding;
+    private ParameterV1 positionEmbedding;
     
     /** 配置信息 */
     private GPT1Config config;
@@ -51,7 +51,7 @@ public class GPT1TokenEmbedding extends Layer {
         if (!alreadyInit) {
             // 1. 初始化Token嵌入矩阵
             // 使用正态分布初始化，标准差为initializerRange
-            tokenEmbedding = new Parameter(
+            tokenEmbedding = new ParameterV1(
                 NdArray.likeRandomN(Shape.of(config.getVocabSize(), config.getHiddenSize()))
                        .mulNum((float) config.getInitializerRange())
             );
@@ -60,7 +60,7 @@ public class GPT1TokenEmbedding extends Layer {
             
             // 2. 初始化位置嵌入矩阵
             // GPT-1使用学习的位置嵌入
-            positionEmbedding = new Parameter(
+            positionEmbedding = new ParameterV1(
                 NdArray.likeRandomN(Shape.of(config.getMaxSequenceLength(), config.getHiddenSize()))
                        .mulNum((float) config.getInitializerRange())
             );
@@ -236,7 +236,7 @@ public class GPT1TokenEmbedding extends Layer {
      * 
      * @return Token嵌入参数
      */
-    public Parameter getTokenEmbedding() {
+    public ParameterV1 getTokenEmbedding() {
         return tokenEmbedding;
     }
     
@@ -245,7 +245,7 @@ public class GPT1TokenEmbedding extends Layer {
      * 
      * @return 位置嵌入参数
      */
-    public Parameter getPositionEmbedding() {
+    public ParameterV1 getPositionEmbedding() {
         return positionEmbedding;
     }
     

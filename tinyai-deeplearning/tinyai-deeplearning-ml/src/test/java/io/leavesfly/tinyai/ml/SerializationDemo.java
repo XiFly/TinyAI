@@ -1,7 +1,7 @@
 package io.leavesfly.tinyai.ml;
 
 import io.leavesfly.tinyai.ndarr.NdArray;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +36,7 @@ public class SerializationDemo {
         System.out.println("\n1. 测试参数管理功能");
         
         // 创建测试参数
-        Map<String, Parameter> params = createTestParameters();
+        Map<String, ParameterV1> params = createTestParameters();
         
         // 测试保存和加载参数
         String filePath = "test-params.params";
@@ -44,7 +44,7 @@ public class SerializationDemo {
             ParameterManager.saveParameters(params, filePath);
             System.out.println("参数保存成功: " + filePath);
             
-            Map<String, Parameter> loadedParams = ParameterManager.loadParameters(filePath);
+            Map<String, ParameterV1> loadedParams = ParameterManager.loadParameters(filePath);
             System.out.println("参数加载成功，加载了 " + loadedParams.size() + " 个参数");
             
             // 清理文件
@@ -57,7 +57,7 @@ public class SerializationDemo {
     private static void testParameterStats() {
         System.out.println("\n2. 测试参数统计功能");
         
-        Map<String, Parameter> params = createTestParameters();
+        Map<String, ParameterV1> params = createTestParameters();
         ParameterManager.ParameterStats stats = ParameterManager.getParameterStats(params);
         
         System.out.println("参数统计信息:");
@@ -71,8 +71,8 @@ public class SerializationDemo {
     private static void testParameterComparison() {
         System.out.println("\n3. 测试参数比较功能");
         
-        Map<String, Parameter> params1 = createTestParameters();
-        Map<String, Parameter> params2 = createTestParameters();
+        Map<String, ParameterV1> params1 = createTestParameters();
+        Map<String, ParameterV1> params2 = createTestParameters();
         
         // 创建虚拟模型进行比较测试
         System.out.println("创建了两组相同结构的参数用于比较测试");
@@ -83,8 +83,8 @@ public class SerializationDemo {
     private static void testParameterDeepCopy() {
         System.out.println("\n4. 测试参数深拷贝功能");
         
-        Map<String, Parameter> originalParams = createTestParameters();
-        Map<String, Parameter> copiedParams = ParameterManager.deepCopyParameters(originalParams);
+        Map<String, ParameterV1> originalParams = createTestParameters();
+        Map<String, ParameterV1> copiedParams = ParameterManager.deepCopyParameters(originalParams);
         
         if (copiedParams != null) {
             System.out.println("深拷贝成功:");
@@ -108,10 +108,10 @@ public class SerializationDemo {
     private static void testParameterFilter() {
         System.out.println("\n5. 测试参数过滤功能");
         
-        Map<String, Parameter> params = createTestParameters();
+        Map<String, ParameterV1> params = createTestParameters();
         
         // 测试通配符过滤
-        Map<String, Parameter> filteredParams = ParameterManager.filterParameters(params, "*weight*");
+        Map<String, ParameterV1> filteredParams = ParameterManager.filterParameters(params, "*weight*");
         System.out.println("过滤包含'weight'的参数:");
         System.out.println("  原始参数数量: " + params.size());
         System.out.println("  过滤后数量: " + filteredParams.size());
@@ -121,29 +121,29 @@ public class SerializationDemo {
         }
     }
     
-    private static Map<String, Parameter> createTestParameters() {
-        Map<String, Parameter> params = new HashMap<>();
+    private static Map<String, ParameterV1> createTestParameters() {
+        Map<String, ParameterV1> params = new HashMap<>();
         
         // 创建一些测试参数
         try {
             // 权重参数（矩阵）
             float[][] weightData = {{0.1f, 0.2f, 0.3f}, {0.4f, 0.5f, 0.6f}};
             NdArray weightArray = NdArray.of(weightData);
-            params.put("layer1.weight", new Parameter(weightArray));
+            params.put("layer1.weight", new ParameterV1(weightArray));
             
             // 偏置参数（向量）
             float[] biasData = {0.1f, 0.2f, 0.3f};
             NdArray biasArray = NdArray.of(biasData);
-            params.put("layer1.bias", new Parameter(biasArray));
+            params.put("layer1.bias", new ParameterV1(biasArray));
             
             // 另一层的参数
             float[][] weight2Data = {{0.7f, 0.8f}, {0.9f, 1.0f}, {1.1f, 1.2f}};
             NdArray weight2Array = NdArray.of(weight2Data);
-            params.put("layer2.weight", new Parameter(weight2Array));
+            params.put("layer2.weight", new ParameterV1(weight2Array));
             
             float[] bias2Data = {0.5f, 0.6f};
             NdArray bias2Array = NdArray.of(bias2Data);
-            params.put("layer2.bias", new Parameter(bias2Array));
+            params.put("layer2.bias", new ParameterV1(bias2Array));
             
         } catch (Exception e) {
             System.out.println("创建测试参数时出错: " + e.getMessage());

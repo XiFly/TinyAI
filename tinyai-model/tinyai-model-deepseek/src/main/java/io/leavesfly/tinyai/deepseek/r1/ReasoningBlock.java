@@ -4,7 +4,6 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Block;
-import io.leavesfly.tinyai.nnet.Parameter;
 import io.leavesfly.tinyai.nnet.layer.activate.ReLuLayer;
 import io.leavesfly.tinyai.nnet.layer.activate.SigmoidLayer;
 import io.leavesfly.tinyai.nnet.layer.dnn.LinearLayer;

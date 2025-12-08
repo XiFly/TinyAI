@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +20,8 @@ import java.util.List;
  */
 public class ConvLayer extends Layer {
 
-    private Parameter weight;        // 卷积核参数
-    private Parameter bias;          // 偏置参数(可选)
+    private ParameterV1 weight;        // 卷积核参数
+    private ParameterV1 bias;          // 偏置参数(可选)
 
     private int inChannels;          // 输入通道数
     private int outChannels;         // 输出通道数
@@ -108,13 +108,13 @@ public class ConvLayer extends Layer {
             Shape weightShape = Shape.of(outChannels, inChannels, kernelHeight, kernelWidth);
             NdArray weightData = NdArray.likeRandomN(weightShape).mulNum(std);
 
-            weight = new Parameter(weightData);
+            weight = new ParameterV1(weightData);
             weight.setName(name + "_weight");
             addParam("weight", weight);
 
             // 初始化偏置参数(如果使用)
             if (useBias) {
-                bias = new Parameter(NdArray.zeros(Shape.of(outChannels)));
+                bias = new ParameterV1(NdArray.zeros(Shape.of(outChannels)));
                 bias.setName(name + "_bias");
                 addParam("bias", bias);
             }

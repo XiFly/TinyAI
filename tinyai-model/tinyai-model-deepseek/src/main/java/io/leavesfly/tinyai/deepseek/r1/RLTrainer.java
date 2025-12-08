@@ -10,6 +10,7 @@ import io.leavesfly.tinyai.ml.loss.Loss;
 import io.leavesfly.tinyai.ml.optimize.Optimizer;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -395,12 +396,12 @@ public class RLTrainer extends Trainer {
     private void clipGradients(float maxNorm) {
         // 这里需要实现梯度裁剪逻辑
         // 由于TinyAI框架的限制，这里是简化实现
-        Map<String, io.leavesfly.tinyai.nnet.Parameter> params = deepseekModel.getAllParams();
+        Map<String, ParameterV1> params = deepseekModel.getAllParams();
         
         float totalNorm = 0.0f;
         
         // 计算梯度的总范数（简化处理）
-        for (io.leavesfly.tinyai.nnet.Parameter param : params.values()) {
+        for (ParameterV1 param : params.values()) {
             if (param.getGrad() != null) {
                 // 直接使用getGrad()返回的NdArray
                 NdArray grad = param.getGrad();
@@ -415,7 +416,7 @@ public class RLTrainer extends Trainer {
         // 如果范数超过阈值，进行裁剪（简化处理）
         if (totalNorm > maxNorm) {
             float scale = maxNorm / totalNorm;
-            for (io.leavesfly.tinyai.nnet.Parameter param : params.values()) {
+            for (ParameterV1 param : params.values()) {
                 if (param.getGrad() != null) {
                     // 直接使用getGrad()返回的NdArray
                     NdArray grad = param.getGrad();

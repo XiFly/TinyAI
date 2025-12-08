@@ -69,8 +69,8 @@ public abstract class Block extends LayerAble {
 
     @Override
     public void clearGrads() {
-        for (Parameter parameter : params.values()) {
-            parameter.clearGrad();
+        for (ParameterV1 parameterV1 : params.values()) {
+            parameterV1.clearGrad();
         }
         for (LayerAble layer : layers) {
             layer.clearGrads();
@@ -103,8 +103,8 @@ public abstract class Block extends LayerAble {
      *
      * @return 包含所有参数的Map
      */
-    public Map<String, Parameter> getAllParams() {
-        Map<String, Parameter> allParams = new HashMap<>();
+    public Map<String, ParameterV1> getAllParams() {
+        Map<String, ParameterV1> allParams = new HashMap<>();
         putAll(allParams);
         return allParams;
     }
@@ -114,7 +114,7 @@ public abstract class Block extends LayerAble {
      *
      * @param allParams 用于存储所有参数的Map
      */
-    private void putAll(Map<String, Parameter> allParams) {
+    private void putAll(Map<String, ParameterV1> allParams) {
         allParams.putAll(params);
         for (LayerAble layer : layers) {
             // 对于Block类型的层，使用getAllParams()递归收集参数

@@ -5,6 +5,7 @@ import io.leavesfly.tinyai.gpt2.GPT2TokenEmbedding;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Block;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import io.leavesfly.tinyai.nnet.layer.dnn.LinearLayer;
 import io.leavesfly.tinyai.nnet.layer.transf.PositionalEncoding;
 
@@ -319,9 +320,9 @@ public class DeepSeekR1Block extends Block {
         stats.put("dropout", dropout);
         
         // 参数统计
-        Map<String, io.leavesfly.tinyai.nnet.Parameter> allParams = getAllParams();
+        Map<String, ParameterV1> allParams = getAllParams();
         long totalParams = 0;
-        for (io.leavesfly.tinyai.nnet.Parameter param : allParams.values()) {
+        for (ParameterV1 param : allParams.values()) {
             totalParams += param.getValue().getShape().size();
         }
         stats.put("total_parameters", totalParams);

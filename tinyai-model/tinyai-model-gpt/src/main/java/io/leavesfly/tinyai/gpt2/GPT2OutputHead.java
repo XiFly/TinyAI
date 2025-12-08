@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,13 +21,13 @@ import java.util.List;
 public class GPT2OutputHead extends Layer {
     
     /** 输出权重矩阵 (nEmbd, vocabSize) */
-    private Parameter outputWeight;
+    private ParameterV1 outputWeight;
     
     /** 是否使用偏置 */
     private boolean useBias;
     
     /** 偏置参数 (1, vocabSize) */
-    private Parameter outputBias;
+    private ParameterV1 outputBias;
     
     /** 词汇表大小 */
     private int vocabSize;
@@ -66,7 +66,7 @@ public class GPT2OutputHead extends Layer {
             // 初始化输出权重矩阵
             // 使用标准正态分布初始化，然后缩放
             double initStd = 0.02;  // GPT-2标准初始化
-            outputWeight = new Parameter(
+            outputWeight = new ParameterV1(
                 NdArray.likeRandomN(Shape.of(nEmbd, vocabSize))
                        .mulNum((float) initStd)
             );
@@ -75,7 +75,7 @@ public class GPT2OutputHead extends Layer {
             
             // 如果使用偏置，初始化偏置参数
             if (useBias) {
-                outputBias = new Parameter(NdArray.zeros(Shape.of(1, vocabSize)));
+                outputBias = new ParameterV1(NdArray.zeros(Shape.of(1, vocabSize)));
                 outputBias.setName(name + "_bias");
                 addParam(outputBias.getName(), outputBias);
             }
@@ -149,7 +149,7 @@ public class GPT2OutputHead extends Layer {
      * @param weight 权重参数 (k, n)
      * @return 矩阵乘法结果 (m, n)
      */
-    private Variable matmul2D(Variable input, Parameter weight) {
+    private Variable matmul2D(Variable input, ParameterV1 weight) {
         // 使用现有的线性变换功能
         return input.linear(weight, null);
     }
@@ -161,7 +161,7 @@ public class GPT2OutputHead extends Layer {
      * @param bias 偏置参数
      * @return 添加偏置后的变量
      */
-    private Variable addBias(Variable input, Parameter bias) {
+    private Variable addBias(Variable input, ParameterV1 bias) {
         NdArray inputData = input.getValue();
         NdArray biasData = bias.getValue();
         
@@ -240,7 +240,7 @@ public class GPT2OutputHead extends Layer {
      * 
      * @return 输出权重参数
      */
-    public Parameter getOutputWeight() {
+    public ParameterV1 getOutputWeight() {
         return outputWeight;
     }
     
@@ -249,7 +249,7 @@ public class GPT2OutputHead extends Layer {
      * 
      * @return 偏置参数，如果不使用偏置则返回null
      */
-    public Parameter getOutputBias() {
+    public ParameterV1 getOutputBias() {
         return outputBias;
     }
     

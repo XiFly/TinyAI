@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.ml.Model;
 import io.leavesfly.tinyai.ml.dataset.Batch;
 import io.leavesfly.tinyai.ml.loss.Loss;
 import io.leavesfly.tinyai.func.Variable;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -65,7 +65,7 @@ public class ParallelBatchProcessor implements Callable<ParallelBatchProcessor.B
             lossVariable.backward();
             
             // 5. 获取梯度并提交到聚合器
-            Map<String, Parameter> gradients = model.getAllParams();
+            Map<String, ParameterV1> gradients = model.getAllParams();
             gradientAggregator.submitGradients(gradients);
             
             // 6. 清理计算图
@@ -76,9 +76,9 @@ public class ParallelBatchProcessor implements Callable<ParallelBatchProcessor.B
         } catch (Exception e) {
             // 如果处理失败，仍然要提交空梯度以免阻塞其他线程
             try {
-                Map<String, Parameter> emptyGradients = model.getAllParams();
+                Map<String, ParameterV1> emptyGradients = model.getAllParams();
                 // 清空梯度
-                for (Parameter param : emptyGradients.values()) {
+                for (ParameterV1 param : emptyGradients.values()) {
                     param.clearGrad();
                 }
                 gradientAggregator.submitGradients(emptyGradients);

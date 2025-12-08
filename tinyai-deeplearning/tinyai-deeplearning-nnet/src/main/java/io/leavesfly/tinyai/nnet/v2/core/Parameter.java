@@ -91,7 +91,7 @@ public class Parameter extends Variable {
 
     @Override
     public String toString() {
-        return "Parameter{" +
+        return "ParameterV1{" +
                 "data=" + (getValue() != null ? getValue().getShape() : "null") +
                 ", requiresGrad=" + requireGrad +
                 ", hasGrad=" + (getGrad() != null) +

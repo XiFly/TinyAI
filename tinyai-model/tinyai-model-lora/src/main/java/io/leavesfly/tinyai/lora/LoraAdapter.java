@@ -3,7 +3,7 @@ package io.leavesfly.tinyai.lora;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 /**
  * LoRA适配器类 - 实现低秩矩阵分解的核心组件
@@ -32,13 +32,13 @@ public class LoraAdapter {
      * 下降矩阵A：将输入从原始维度映射到低秩空间
      * 形状: (input_dim, rank)
      */
-    private final Parameter matrixA;
+    private final ParameterV1 matrixA;
     
     /**
      * 上升矩阵B：将低秩空间映射回输出维度
      * 形状: (rank, output_dim)
      */
-    private final Parameter matrixB;
+    private final ParameterV1 matrixB;
     
     /**
      * 缩放因子：控制LoRA输出的幅度
@@ -65,12 +65,12 @@ public class LoraAdapter {
         // 初始化矩阵A：使用高斯分布
         NdArray initA = NdArray.likeRandomN(Shape.of(inputDim, config.getRank()))
                 .divNum(Math.sqrt(inputDim));
-        this.matrixA = new Parameter(initA);
+        this.matrixA = new ParameterV1(initA);
         this.matrixA.setName("lora_A");
         
         // 初始化矩阵B：使用零初始化，确保训练开始时LoRA输出为0
         NdArray initB = NdArray.zeros(Shape.of(config.getRank(), outputDim));
-        this.matrixB = new Parameter(initB);
+        this.matrixB = new ParameterV1(initB);
         this.matrixB.setName("lora_B");
     }
     
@@ -157,7 +157,7 @@ public class LoraAdapter {
      * 
      * @return 矩阵A参数
      */
-    public Parameter getMatrixA() {
+    public ParameterV1 getMatrixA() {
         return matrixA;
     }
     
@@ -166,7 +166,7 @@ public class LoraAdapter {
      * 
      * @return 矩阵B参数
      */
-    public Parameter getMatrixB() {
+    public ParameterV1 getMatrixB() {
         return matrixB;
     }
     

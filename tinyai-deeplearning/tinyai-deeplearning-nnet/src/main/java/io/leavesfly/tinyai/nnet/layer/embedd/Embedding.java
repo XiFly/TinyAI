@@ -5,7 +5,7 @@ import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.NdArrayUtil;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +31,7 @@ public class Embedding extends Layer {
      * 嵌入权重矩阵
      * 形状: (vocabSize, embedSize)
      */
-    private Parameter wIn;
+    private ParameterV1 wIn;
 
     /**
      * 词汇表大小
@@ -59,7 +59,7 @@ public class Embedding extends Layer {
         this.vocabSize = vocabSize;
         this.embedSize = embedSize;
         NdArray initWeight = NdArray.likeRandomN(Shape.of(vocabSize, embedSize)).mulNum(0.01f);
-        wIn = new Parameter(initWeight);
+        wIn = new ParameterV1(initWeight);
         wIn.setName("wIn");
         addParam(wIn.getName(), wIn);
     }
@@ -180,7 +180,7 @@ public class Embedding extends Layer {
      *
      * @return 嵌入权重矩阵参数
      */
-    public Parameter getWeight() {
+    public ParameterV1 getWeight() {
         return wIn;
     }
 }

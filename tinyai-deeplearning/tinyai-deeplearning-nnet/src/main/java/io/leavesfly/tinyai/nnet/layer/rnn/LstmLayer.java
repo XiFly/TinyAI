@@ -3,7 +3,7 @@ package io.leavesfly.tinyai.nnet.layer.rnn;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import io.leavesfly.tinyai.nnet.RnnLayer;
 import io.leavesfly.tinyai.nnet.layer.activate.SigmoidLayer;
 
@@ -83,12 +83,12 @@ public class LstmLayer extends RnnLayer {
         // x2f: 输入到遗忘门的权重矩阵
         NdArray initWeight = NdArray.likeRandomN(Shape.of(xInputShape.getColumn(), hiddenSize))
                 .mulNum(Math.sqrt((double) 1 / xInputShape.getColumn()));
-        Parameter x2f = new Parameter(initWeight);
+        ParameterV1 x2f = new ParameterV1(initWeight);
         x2f.setName(getName() + ".x2f");
         addParam(x2f.getName(), x2f);
 
         // x2f-b: 遗忘门的偏置项
-        Parameter b = new Parameter(NdArray.zeros(Shape.of(1, hiddenSize)));
+        ParameterV1 b = new ParameterV1(NdArray.zeros(Shape.of(1, hiddenSize)));
         b.setName(getName() + ".x2f-b");
         addParam(b.getName(), b);
 
@@ -96,12 +96,12 @@ public class LstmLayer extends RnnLayer {
         // x2i: 输入到输入门的权重矩阵
         initWeight = NdArray.likeRandomN(Shape.of(xInputShape.getColumn(), hiddenSize))
                 .mulNum(Math.sqrt((double) 1 / xInputShape.getColumn()));
-        Parameter x2i = new Parameter(initWeight);
+        ParameterV1 x2i = new ParameterV1(initWeight);
         x2i.setName(getName() + ".x2i");
         addParam(x2i.getName(), x2i);
 
         // x2i-b: 输入门的偏置项
-        b = new Parameter(NdArray.zeros(Shape.of(1, hiddenSize)));
+        b = new ParameterV1(NdArray.zeros(Shape.of(1, hiddenSize)));
         b.setName(getName() + ".x2i-b");
         addParam(b.getName(), b);
 
@@ -109,12 +109,12 @@ public class LstmLayer extends RnnLayer {
         // x2o: 输入到输出门的权重矩阵
         initWeight = NdArray.likeRandomN(Shape.of(xInputShape.getColumn(), hiddenSize))
                 .mulNum(Math.sqrt((double) 1 / xInputShape.getColumn()));
-        Parameter x2o = new Parameter(initWeight);
+        ParameterV1 x2o = new ParameterV1(initWeight);
         x2o.setName(getName() + ".x2o");
         addParam(x2o.getName(), x2o);
 
         // x2o-b: 输出门的偏置项
-        b = new Parameter(NdArray.zeros(Shape.of(1, hiddenSize)));
+        b = new ParameterV1(NdArray.zeros(Shape.of(1, hiddenSize)));
         b.setName(getName() + ".x2o-b");
         addParam(b.getName(), b);
 
@@ -122,12 +122,12 @@ public class LstmLayer extends RnnLayer {
         // x2u: 输入到候选细胞状态的权重矩阵
         initWeight = NdArray.likeRandomN(Shape.of(xInputShape.getColumn(), hiddenSize))
                 .mulNum(Math.sqrt((double) 1 / xInputShape.getColumn()));
-        Parameter x2u = new Parameter(initWeight);
+        ParameterV1 x2u = new ParameterV1(initWeight);
         x2u.setName(getName() + ".x2u");
         addParam(x2u.getName(), x2u);
 
         // x2u-b: 候选细胞状态的偏置项
-        b = new Parameter(NdArray.zeros(Shape.of(1, hiddenSize)));
+        b = new ParameterV1(NdArray.zeros(Shape.of(1, hiddenSize)));
         b.setName(getName() + ".x2u-b");
         addParam(b.getName(), b);
 
@@ -138,28 +138,28 @@ public class LstmLayer extends RnnLayer {
         // h2f: 隐藏状态到遗忘门的权重矩阵
         initWeight = NdArray.likeRandomN(Shape.of(hiddenSize, hiddenSize))
                 .mulNum(Math.sqrt((double) 1 / hiddenSize));
-        Parameter h2f = new Parameter(initWeight);
+        ParameterV1 h2f = new ParameterV1(initWeight);
         h2f.setName(getName() + ".h2f");
         addParam(h2f.getName(), h2f);
 
         // h2i: 隐藏状态到输入门的权重矩阵
         initWeight = NdArray.likeRandomN(Shape.of(hiddenSize, hiddenSize))
                 .mulNum(Math.sqrt((double) 1 / hiddenSize));
-        Parameter h2i = new Parameter(initWeight);
+        ParameterV1 h2i = new ParameterV1(initWeight);
         h2i.setName(getName() + ".h2i");
         addParam(h2i.getName(), h2i);
 
         // h2o: 隐藏状态到输出门的权重矩阵
         initWeight = NdArray.likeRandomN(Shape.of(hiddenSize, hiddenSize))
                 .mulNum(Math.sqrt((double) 1 / hiddenSize));
-        Parameter h2o = new Parameter(initWeight);
+        ParameterV1 h2o = new ParameterV1(initWeight);
         h2o.setName(getName() + ".h2o");
         addParam(h2o.getName(), h2o);
 
         // h2u: 隐藏状态到候选细胞状态的权重矩阵
         initWeight = NdArray.likeRandomN(Shape.of(hiddenSize, hiddenSize))
                 .mulNum(Math.sqrt((double) 1 / hiddenSize));
-        Parameter h2u = new Parameter(initWeight);
+        ParameterV1 h2u = new ParameterV1(initWeight);
         h2u.setName(getName() + ".h2u");
         addParam(h2u.getName(), h2u);
 

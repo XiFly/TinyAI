@@ -3,7 +3,7 @@ package io.leavesfly.tinyai.nnet.block;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import io.leavesfly.tinyai.util.Config;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,8 +46,8 @@ public class MlpBlockTest {
         int expectedLayers = (layerSizes.length - 1) * 2 - 1; // 2个隐藏层+激活，1个输出层
 
         // 通过参数数量间接验证网络结构
-        Map<String, Parameter> reluParams = reluMlp.getAllParams();
-        Map<String, Parameter> sigmoidParams = sigmoidMlp.getAllParams();
+        Map<String, ParameterV1> reluParams = reluMlp.getAllParams();
+        Map<String, ParameterV1> sigmoidParams = sigmoidMlp.getAllParams();
         assertNotNull("参数不应该为null", reluParams);
         assertNotNull("参数不应该为null", sigmoidParams);
 
@@ -59,8 +59,8 @@ public class MlpBlockTest {
     @Test
     public void testParameterInitialization() {
         // 测试参数是否正确初始化
-        Map<String, Parameter> reluParams = reluMlp.getAllParams();
-        Map<String, Parameter> sigmoidParams = sigmoidMlp.getAllParams();
+        Map<String, ParameterV1> reluParams = reluMlp.getAllParams();
+        Map<String, ParameterV1> sigmoidParams = sigmoidMlp.getAllParams();
 
         assertNotNull("ReLU MLP参数映射不应该为null", reluParams);
         assertNotNull("Sigmoid MLP参数映射不应该为null", sigmoidParams);
@@ -281,20 +281,20 @@ public class MlpBlockTest {
     @Test
     public void testGetAllParams() {
         // 测试获取所有参数的功能
-        Map<String, Parameter> reluParams = reluMlp.getAllParams();
-        Map<String, Parameter> sigmoidParams = sigmoidMlp.getAllParams();
+        Map<String, ParameterV1> reluParams = reluMlp.getAllParams();
+        Map<String, ParameterV1> sigmoidParams = sigmoidMlp.getAllParams();
 
         assertNotNull("ReLU MLP getAllParams不应该返回null", reluParams);
         assertNotNull("Sigmoid MLP getAllParams不应该返回null", sigmoidParams);
 
         // 验证参数的有效性
-        for (Parameter param : reluParams.values()) {
+        for (ParameterV1 param : reluParams.values()) {
             assertNotNull("参数不应该为null", param);
             assertNotNull("参数值不应该为null", param.getValue());
             assertNotNull("参数名称不应该为null", param.getName());
         }
 
-        for (Parameter param : sigmoidParams.values()) {
+        for (ParameterV1 param : sigmoidParams.values()) {
             assertNotNull("参数不应该为null", param);
             assertNotNull("参数值不应该为null", param.getValue());
             assertNotNull("参数名称不应该为null", param.getName());

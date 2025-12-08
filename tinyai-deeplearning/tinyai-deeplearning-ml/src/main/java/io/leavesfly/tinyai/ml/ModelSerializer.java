@@ -3,7 +3,7 @@ package io.leavesfly.tinyai.ml;
 import io.leavesfly.tinyai.ml.exception.ModelSerializationException;
 import io.leavesfly.tinyai.ml.parameter.ParameterOperator;
 import io.leavesfly.tinyai.ml.util.ValidationUtils;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.io.*;
 import java.util.HashMap;
@@ -135,7 +135,7 @@ public class ModelSerializer {
             File file = new File(filePath);
             createDirectoryIfNotExists(file.getParentFile());
 
-            Map<String, Parameter> params = model.getAllParams();
+            Map<String, ParameterV1> params = model.getAllParams();
 
             try (FileOutputStream fos = new FileOutputStream(file);
                  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
@@ -162,24 +162,24 @@ public class ModelSerializer {
                 throw new ModelSerializationException("Parameters file does not exist: " + filePath);
             }
 
-            Map<String, Parameter> loadedParams;
+            Map<String, ParameterV1> loadedParams;
             try (FileInputStream fis = new FileInputStream(file);
                  ObjectInputStream ois = new ObjectInputStream(fis)) {
-                loadedParams = (Map<String, Parameter>) ois.readObject();
+                loadedParams = (Map<String, ParameterV1>) ois.readObject();
             }
 
             // 获取目标模型的参数
-            Map<String, Parameter> modelParams = model.getAllParams();
+            Map<String, ParameterV1> modelParams = model.getAllParams();
 
             // 加载匹配的参数（使用统一的参数操作接口）
             int loadedCount = 0;
             int skippedCount = 0;
-            for (Map.Entry<String, Parameter> entry : loadedParams.entrySet()) {
+            for (Map.Entry<String, ParameterV1> entry : loadedParams.entrySet()) {
                 String paramName = entry.getKey();
-                Parameter loadedParam = entry.getValue();
+                ParameterV1 loadedParam = entry.getValue();
 
                 if (modelParams.containsKey(paramName)) {
-                    Parameter modelParam = modelParams.get(paramName);
+                    ParameterV1 modelParam = modelParams.get(paramName);
                     try {
                         // 使用统一的参数复制接口（支持任意维度）
                         ParameterOperator.copyParameter(loadedParam, modelParam);
@@ -320,8 +320,8 @@ public class ModelSerializer {
             return false;
         }
 
-        Map<String, Parameter> params1 = model1.getAllParams();
-        Map<String, Parameter> params2 = model2.getAllParams();
+        Map<String, ParameterV1> params1 = model1.getAllParams();
+        Map<String, ParameterV1> params2 = model2.getAllParams();
 
         // 检查参数数量是否相同
         if (params1.size() != params2.size()) {
@@ -329,15 +329,15 @@ public class ModelSerializer {
         }
 
         // 使用统一的参数比较接口（支持任意维度）
-        for (Map.Entry<String, Parameter> entry : params1.entrySet()) {
+        for (Map.Entry<String, ParameterV1> entry : params1.entrySet()) {
             String paramName = entry.getKey();
-            Parameter param1 = entry.getValue();
+            ParameterV1 param1 = entry.getValue();
 
             if (!params2.containsKey(paramName)) {
                 return false;
             }
 
-            Parameter param2 = params2.get(paramName);
+            ParameterV1 param2 = params2.get(paramName);
             
             // 使用统一的参数比较方法
             if (!ParameterOperator.compareParameter(param1, param2, 1e-7)) {

@@ -13,7 +13,7 @@ import io.leavesfly.tinyai.ndarr.NdArray;
  * Parameter类继承自Variable类，用于表示神经网络中需要训练的参数。
  * 在前向传播和反向传播过程中，Parameter会参与计算并更新其值。
  */
-public class Parameter extends Variable {
+public class ParameterV1 extends Variable {
 
 
     /**
@@ -21,7 +21,7 @@ public class Parameter extends Variable {
      *
      * @param value 参数的初始值
      */
-    public Parameter(NdArray value) {
+    public ParameterV1(NdArray value) {
         super(value);
     }
 }

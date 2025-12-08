@@ -3,7 +3,7 @@ package io.leavesfly.tinyai.nnet.layer.cnn;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,7 +39,7 @@ public class ConvLayerTest {
     @Test
     public void testParameterInitialization() {
         // 测试权重参数初始化
-        Parameter weight = basicConv.getParamBy("weight");
+        ParameterV1 weight = basicConv.getParamBy("weight");
         assertNotNull("权重参数应该被初始化", weight);
         
         // 检查权重形状: (out_channels, in_channels, kernel_height, kernel_width)
@@ -47,7 +47,7 @@ public class ConvLayerTest {
         assertEquals("权重形状应该正确", expectedWeightShape, weight.getValue().getShape());
         
         // 测试偏置参数初始化
-        Parameter bias = basicConv.getParamBy("bias");
+        ParameterV1 bias = basicConv.getParamBy("bias");
         assertNotNull("偏置参数应该被初始化", bias);
         
         // 检查偏置形状: (out_channels,)
@@ -58,8 +58,8 @@ public class ConvLayerTest {
     @Test
     public void testNoBiasConfiguration() {
         // 测试不使用偏置的配置
-        Parameter weight = convNoBias.getParamBy("weight");
-        Parameter bias = convNoBias.getParamBy("bias");
+        ParameterV1 weight = convNoBias.getParamBy("weight");
+        ParameterV1 bias = convNoBias.getParamBy("bias");
         
         assertNotNull("权重参数应该存在", weight);
         assertNull("偏置参数不应该存在", bias);
@@ -68,8 +68,8 @@ public class ConvLayerTest {
     @Test
     public void testParameterNames() {
         // 测试参数名称设置
-        Parameter weight = basicConv.getParamBy("weight");
-        Parameter bias = basicConv.getParamBy("bias");
+        ParameterV1 weight = basicConv.getParamBy("weight");
+        ParameterV1 bias = basicConv.getParamBy("bias");
         
         assertEquals("权重参数名称应该正确", "basic_conv_weight", weight.getName());
         assertEquals("偏置参数名称应该正确", "basic_conv_bias", bias.getName());
@@ -141,7 +141,7 @@ public class ConvLayerTest {
     @Test
     public void testHeInitialization() {
         // 测试He权重初始化
-        Parameter weight = basicConv.getParamBy("weight");
+        ParameterV1 weight = basicConv.getParamBy("weight");
         NdArray weightData = weight.getValue();
         
         // 将权重数据转换为矩阵格式进行统计（简化处理）
@@ -184,7 +184,7 @@ public class ConvLayerTest {
     @Test
     public void testBiasInitialization() {
         // 测试偏置初始化（应该初始化为0）
-        Parameter bias = basicConv.getParamBy("bias");
+        ParameterV1 bias = basicConv.getParamBy("bias");
         NdArray biasData = bias.getValue();
         
         // 获取偏置的形状信息
@@ -203,7 +203,7 @@ public class ConvLayerTest {
         ConvLayer shapeConv = new ConvLayer("shape_conv", inputShape);
         
         // 验证从形状推断的参数
-        Parameter weight = shapeConv.getParamBy("weight");
+        ParameterV1 weight = shapeConv.getParamBy("weight");
         assertNotNull("从形状构造的权重应该存在", weight);
         
         // 输入通道数应该是1（从输入形状推断），输出通道数应该是默认的32

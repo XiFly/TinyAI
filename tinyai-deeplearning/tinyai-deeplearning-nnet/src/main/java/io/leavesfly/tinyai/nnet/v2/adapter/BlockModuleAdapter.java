@@ -3,6 +3,7 @@ package io.leavesfly.tinyai.nnet.v2.adapter;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Block;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import io.leavesfly.tinyai.nnet.v2.core.Module;
 
 import java.util.Map;
@@ -59,26 +60,26 @@ public class BlockModuleAdapter extends Module {
 
     /**
      * 注册 Block 的所有参数到 Module 中
-     * 将 V1 的 Parameter 转换为 V2 的 Parameter
+     * 将 V1 的 ParameterV1 转换为 V2 的 ParameterV1
      */
     private void registerBlockParameters() {
         if (block == null) {
             return;
         }
 
-        Map<String, io.leavesfly.tinyai.nnet.Parameter> blockParams = block.getAllParams();
-        for (Map.Entry<String, io.leavesfly.tinyai.nnet.Parameter> entry : blockParams.entrySet()) {
+        Map<String, ParameterV1> blockParams = block.getAllParams();
+        for (Map.Entry<String, ParameterV1> entry : blockParams.entrySet()) {
             String paramName = entry.getKey();
-            io.leavesfly.tinyai.nnet.Parameter v1Param = entry.getValue();
+            ParameterV1 v1Param = entry.getValue();
             
             if (v1Param != null) {
-                // 将 V1 Parameter 转换为 V2 Parameter
-                // V1 Parameter 通过 isRequireGrad() 方法获取是否需要梯度
+                // 将 V1 ParameterV1 转换为 V2 ParameterV1
+                // V1 ParameterV1 通过 isRequireGrad() 方法获取是否需要梯度
                 boolean requiresGrad = v1Param.isRequireGrad();
                 
                 io.leavesfly.tinyai.nnet.v2.core.Parameter v2Param = 
                     new io.leavesfly.tinyai.nnet.v2.core.Parameter(v1Param.getValue(), requiresGrad);
-                // 如果 V1 Parameter 有梯度，复制梯度
+                // 如果 V1 ParameterV1 有梯度，复制梯度
                 if (v1Param.getGrad() != null) {
                     v2Param.setGrad(v1Param.getGrad());
                 }
@@ -106,7 +107,7 @@ public class BlockModuleAdapter extends Module {
      * 获取所有参数（V2 接口）
      * 返回 V2 格式的参数映射
      *
-     * @return 参数映射（使用 V2 Parameter）
+     * @return 参数映射（使用 V2 ParameterV1）
      */
     @Override
     public Map<String, io.leavesfly.tinyai.nnet.v2.core.Parameter> namedParameters() {
@@ -124,13 +125,13 @@ public class BlockModuleAdapter extends Module {
             return;
         }
 
-        Map<String, io.leavesfly.tinyai.nnet.Parameter> blockParams = block.getAllParams();
+        Map<String, ParameterV1> blockParams = block.getAllParams();
         Map<String, io.leavesfly.tinyai.nnet.v2.core.Parameter> moduleParams = _parameters;
 
         // 更新已存在的参数值
-        for (Map.Entry<String, io.leavesfly.tinyai.nnet.Parameter> entry : blockParams.entrySet()) {
+        for (Map.Entry<String, ParameterV1> entry : blockParams.entrySet()) {
             String paramName = entry.getKey();
-            io.leavesfly.tinyai.nnet.Parameter v1Param = entry.getValue();
+            ParameterV1 v1Param = entry.getValue();
             
             if (v1Param != null && moduleParams.containsKey(paramName)) {
                 io.leavesfly.tinyai.nnet.v2.core.Parameter v2Param = moduleParams.get(paramName);

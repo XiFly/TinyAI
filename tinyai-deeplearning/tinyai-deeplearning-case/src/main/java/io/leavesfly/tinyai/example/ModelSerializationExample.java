@@ -6,7 +6,7 @@ import io.leavesfly.tinyai.ml.ModelInfo;
 import io.leavesfly.tinyai.ml.ModelInfoExporter;
 import io.leavesfly.tinyai.ml.ParameterManager;
 import io.leavesfly.tinyai.ndarr.NdArray;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import io.leavesfly.tinyai.nnet.block.MlpBlock;
 import io.leavesfly.tinyai.util.Config;
 
@@ -98,8 +98,8 @@ public class ModelSerializationExample {
      * @param model 要初始化参数的模型
      */
     private static void initializeRandomParameters(Model model) {
-        Map<String, Parameter> params = model.getAllParams();
-        for (Parameter param : params.values()) {
+        Map<String, ParameterV1> params = model.getAllParams();
+        for (ParameterV1 param : params.values()) {
             // 用随机值初始化参数
             NdArray randomArray = NdArray.likeRandomN(param.getValue().getShape());
             param.setValue(randomArray);
@@ -215,7 +215,7 @@ public class ModelSerializationExample {
             System.out.println("  复制后参数是否相同: " + paramsEqual);
             
             // 获取参数统计
-            Map<String, Parameter> params = originalModel.getAllParams();
+            Map<String, ParameterV1> params = originalModel.getAllParams();
             ParameterManager.ParameterStats stats = ParameterManager.getParameterStats(params);
             System.out.println("  参数统计: " + stats);
             

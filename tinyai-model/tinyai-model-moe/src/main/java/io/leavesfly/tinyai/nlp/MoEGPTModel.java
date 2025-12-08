@@ -254,7 +254,7 @@ public class MoEGPTModel extends Block {
     public void printModelInfo() {
         System.out.println("\n=== MoE-GPT Model Information ===");
         System.out.println(getModelConfig());
-        System.out.println("\nParameter Distribution:");
+        System.out.println("\nParameterV1 Distribution:");
 
         // 统计参数数量
         long totalParams = getTotalParameterCount();
@@ -283,7 +283,7 @@ public class MoEGPTModel extends Block {
         System.out.println("  - Output Head: " + formatNumber(outputHeadParams));
         System.out.println("  - Total Parameters: " + formatNumber(totalParams));
         System.out.println("  - Active Parameters (per forward): " + formatNumber(activeParams));
-        System.out.printf("  - Parameter Efficiency: %.2f%% (%.2fx sparsity)\n",
+        System.out.printf("  - ParameterV1 Efficiency: %.2f%% (%.2fx sparsity)\n",
                 (double) activeParams / totalParams * 100,
                 (double) totalParams / activeParams);
         System.out.println("==========================================\n");

@@ -1,7 +1,7 @@
 package io.leavesfly.tinyai.ml.optimize;
 
 import io.leavesfly.tinyai.ml.Model;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 /**
  * 随机梯度下降优化器
@@ -27,12 +27,12 @@ public class SGD extends Optimizer {
     }
 
     @Override
-    public void updateOne(Parameter parameter) {
+    public void updateOne(ParameterV1 parameterV1) {
         // 检查参数的梯度是否为null，如果为null则跳过更新
-        if (parameter.getGrad() == null) {
+        if (parameterV1.getGrad() == null) {
             return;
         }
-        parameter.setValue(parameter.getValue().sub(parameter.getGrad().mulNum(lr)));
+        parameterV1.setValue(parameterV1.getValue().sub(parameterV1.getGrad().mulNum(lr)));
     }
     
     /**

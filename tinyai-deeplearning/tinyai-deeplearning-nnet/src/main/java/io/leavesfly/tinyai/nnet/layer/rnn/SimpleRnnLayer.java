@@ -3,10 +3,9 @@ package io.leavesfly.tinyai.nnet.layer.rnn;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import io.leavesfly.tinyai.nnet.RnnLayer;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -33,19 +32,19 @@ public class SimpleRnnLayer extends RnnLayer {
      * 输入到隐藏状态的权重矩阵参数
      * 形状: (input_size, hidden_size)
      */
-    Parameter x2h;
+    ParameterV1 x2h;
 
     /**
      * 隐藏状态到隐藏状态的权重矩阵参数
      * 形状: (hidden_size, hidden_size)
      */
-    Parameter h2h;
+    ParameterV1 h2h;
 
     /**
      * 偏置参数
      * 形状: (1, hidden_size)
      */
-    Parameter b;
+    ParameterV1 b;
 
     /**
      * 当前时间步的隐藏状态变量
@@ -129,18 +128,18 @@ public class SimpleRnnLayer extends RnnLayer {
         // 初始化输入到隐藏状态的权重矩阵，使用Xavier初始化
         NdArray initWeight = NdArray.likeRandomN(Shape.of(inputSize, hiddenSize))
                 .mulNum(Math.sqrt((double) 1 / inputSize));
-        x2h = new Parameter(initWeight);
+        x2h = new ParameterV1(initWeight);
         x2h.setName(getName() + ".x2h");
         addParam(x2h.getName(), x2h);
 
         // 初始化隐藏状态到隐藏状态的权重矩阵，使用Xavier初始化
         initWeight = NdArray.likeRandomN(Shape.of(hiddenSize, hiddenSize)).mulNum(Math.sqrt((double) 1 / hiddenSize));
-        h2h = new Parameter(initWeight);
+        h2h = new ParameterV1(initWeight);
         h2h.setName(getName() + ".h2h");
         addParam(h2h.getName(), h2h);
 
         // 初始化偏置项为零
-        b = new Parameter(NdArray.zeros(Shape.of(1, hiddenSize)));
+        b = new ParameterV1(NdArray.zeros(Shape.of(1, hiddenSize)));
         b.setName(getName() + ".b");
         addParam(b.getName(), b);
     }

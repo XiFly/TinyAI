@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +24,10 @@ import java.util.List;
 public class GPT1OutputHead extends Layer {
     
     /** 输出投影权重矩阵 (hiddenSize, vocabSize) */
-    private Parameter outputProjection;
+    private ParameterV1 outputProjection;
     
     /** 输出偏置向量 (vocabSize) - 可选 */
-    private Parameter outputBias;
+    private ParameterV1 outputBias;
     
     /** 配置信息 */
     private GPT1Config config;
@@ -39,7 +39,7 @@ public class GPT1OutputHead extends Layer {
     private boolean shareEmbeddingWeights;
     
     /** 共享的Token嵌入参数（如果启用权重共享） */
-    private Parameter sharedTokenEmbedding;
+    private ParameterV1 sharedTokenEmbedding;
     
     /**
      * 构造GPT-1输出头
@@ -76,7 +76,7 @@ public class GPT1OutputHead extends Layer {
      * @param useBias 是否使用偏置
      * @param tokenEmbedding 共享的Token嵌入权重
      */
-    public GPT1OutputHead(String name, GPT1Config config, boolean useBias, Parameter tokenEmbedding) {
+    public GPT1OutputHead(String name, GPT1Config config, boolean useBias, ParameterV1 tokenEmbedding) {
         this(name, config, useBias);
         this.shareEmbeddingWeights = true;
         this.sharedTokenEmbedding = tokenEmbedding;
@@ -90,7 +90,7 @@ public class GPT1OutputHead extends Layer {
                 this.outputProjection = sharedTokenEmbedding;
             } else {
                 // 独立初始化输出投影权重
-                this.outputProjection = new Parameter(
+                this.outputProjection = new ParameterV1(
                     NdArray.likeRandomN(Shape.of(config.getHiddenSize(), config.getVocabSize()))
                            .mulNum((float) config.getInitializerRange())
                 );
@@ -100,7 +100,7 @@ public class GPT1OutputHead extends Layer {
             
             // 如果使用偏置，初始化偏置参数
             if (useBias) {
-                this.outputBias = new Parameter(
+                this.outputBias = new ParameterV1(
                     NdArray.zeros(Shape.of(config.getVocabSize()))
                 );
                 outputBias.setName(name + "_output_bias");
@@ -185,7 +185,7 @@ public class GPT1OutputHead extends Layer {
      * 
      * @param tokenEmbedding 要共享的Token嵌入权重
      */
-    public void setSharedEmbeddingWeights(Parameter tokenEmbedding) {
+    public void setSharedEmbeddingWeights(ParameterV1 tokenEmbedding) {
         if (tokenEmbedding.getValue().getShape().getDimension(0) != config.getVocabSize() ||
             tokenEmbedding.getValue().getShape().getDimension(1) != config.getHiddenSize()) {
             throw new IllegalArgumentException("Token嵌入权重的形状与配置不匹配");
@@ -221,7 +221,7 @@ public class GPT1OutputHead extends Layer {
      * 
      * @return 输出投影权重
      */
-    public Parameter getOutputProjection() {
+    public ParameterV1 getOutputProjection() {
         return outputProjection;
     }
     
@@ -230,7 +230,7 @@ public class GPT1OutputHead extends Layer {
      * 
      * @return 输出偏置
      */
-    public Parameter getOutputBias() {
+    public ParameterV1 getOutputBias() {
         return outputBias;
     }
     
@@ -266,7 +266,7 @@ public class GPT1OutputHead extends Layer {
      * 
      * @return 共享的Token嵌入参数
      */
-    public Parameter getSharedTokenEmbedding() {
+    public ParameterV1 getSharedTokenEmbedding() {
         return sharedTokenEmbedding;
     }
     

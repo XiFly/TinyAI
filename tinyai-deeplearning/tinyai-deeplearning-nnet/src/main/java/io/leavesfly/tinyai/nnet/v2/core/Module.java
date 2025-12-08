@@ -95,7 +95,7 @@ public abstract class Module extends Function {
                 _buffers.containsKey(paramName) ||
                 _modules.containsKey(paramName)) {
             throw new IllegalArgumentException(
-                    "Parameter name '" + paramName + "' conflicts with existing parameter, buffer or module");
+                    "ParameterV1 name '" + paramName + "' conflicts with existing parameter, buffer or module");
         }
         _parameters.put(paramName, param);
         return param;

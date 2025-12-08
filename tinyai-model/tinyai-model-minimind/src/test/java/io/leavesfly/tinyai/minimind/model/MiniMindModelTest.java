@@ -144,7 +144,7 @@ public class MiniMindModelTest {
         // Medium 模型参数应该比 Small 多
         assertTrue(mediumParams > smallParams);
 
-        System.out.println("\n=== Parameter Estimation ===");
+        System.out.println("\n=== ParameterV1 Estimation ===");
         System.out.println("Small model: " + smallParams + " parameters");
         System.out.println("Medium model: " + mediumParams + " parameters");
     }

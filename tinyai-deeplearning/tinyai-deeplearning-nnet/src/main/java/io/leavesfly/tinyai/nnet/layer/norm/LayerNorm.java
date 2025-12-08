@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.List;
 
@@ -22,8 +22,8 @@ import java.util.List;
  */
 public class LayerNorm extends Layer {
 
-    private Parameter gamma;      // 缩放参数
-    private Parameter beta;       // 偏移参数
+    private ParameterV1 gamma;      // 缩放参数
+    private ParameterV1 beta;       // 偏移参数
     private int normalizedShape;  // 归一化维度大小
     private double epsilon;       // 防止除零的小常数
 
@@ -76,12 +76,12 @@ public class LayerNorm extends Layer {
     public void init() {
         if (!alreadyInit) {
             // 初始化缩放参数γ为1
-            gamma = new Parameter(NdArray.ones(Shape.of(normalizedShape)));
+            gamma = new ParameterV1(NdArray.ones(Shape.of(normalizedShape)));
             gamma.setName(name + "_gamma");
             addParam("gamma", gamma);
 
             // 初始化偏移参数β为0
-            beta = new Parameter(NdArray.zeros(Shape.of(normalizedShape)));
+            beta = new ParameterV1(NdArray.zeros(Shape.of(normalizedShape)));
             beta.setName(name + "_beta");
             addParam("beta", beta);
 

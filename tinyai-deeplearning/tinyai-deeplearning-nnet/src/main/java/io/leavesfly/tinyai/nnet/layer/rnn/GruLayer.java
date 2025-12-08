@@ -4,12 +4,10 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.Parameter;
-import io.leavesfly.tinyai.nnet.layer.activate.SigmoidLayer;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * 门控循环单元层(GRU)
@@ -54,57 +52,57 @@ public class GruLayer extends Layer {
      * 输入到更新门的权重矩阵
      * 形状: (input_size, hidden_size)
      */
-    private Parameter w_z;
+    private ParameterV1 w_z;
 
     /**
      * 隐藏状态到更新门的权重矩阵
      * 形状: (hidden_size, hidden_size)
      */
-    private Parameter u_z;
+    private ParameterV1 u_z;
 
     /**
      * 更新门的偏置项
      * 形状: (1, hidden_size)
      */
-    private Parameter b_z;
+    private ParameterV1 b_z;
 
     // 重置门参数
     /**
      * 输入到重置门的权重矩阵
      * 形状: (input_size, hidden_size)
      */
-    private Parameter w_r;
+    private ParameterV1 w_r;
 
     /**
      * 隐藏状态到重置门的权重矩阵
      * 形状: (hidden_size, hidden_size)
      */
-    private Parameter u_r;
+    private ParameterV1 u_r;
 
     /**
      * 重置门的偏置项
      * 形状: (1, hidden_size)
      */
-    private Parameter b_r;
+    private ParameterV1 b_r;
 
     // 候选状态参数
     /**
      * 输入到候选状态的权重矩阵
      * 形状: (input_size, hidden_size)
      */
-    private Parameter w_h;
+    private ParameterV1 w_h;
 
     /**
      * 隐藏状态到候选状态的权重矩阵
      * 形状: (hidden_size, hidden_size)
      */
-    private Parameter u_h;
+    private ParameterV1 u_h;
 
     /**
      * 候选状态的偏置项
      * 形状: (1, hidden_size)
      */
-    private Parameter b_h;
+    private ParameterV1 b_h;
 
     /**
      * 隐藏层大小
@@ -213,51 +211,51 @@ public class GruLayer extends Layer {
         // 初始化更新门参数
         NdArray initWeight = NdArray.likeRandomN(Shape.of(inputSize, hiddenSize))
                 .mulNum((float) Math.sqrt(2.0 / (inputSize + hiddenSize)));
-        w_z = new Parameter(initWeight);
+        w_z = new ParameterV1(initWeight);
         w_z.setName("w_z");
         addParam(w_z.getName(), w_z);
 
         initWeight = NdArray.likeRandomN(Shape.of(hiddenSize, hiddenSize))
                 .mulNum((float) Math.sqrt(2.0 / (hiddenSize + hiddenSize)));
-        u_z = new Parameter(initWeight);
+        u_z = new ParameterV1(initWeight);
         u_z.setName("u_z");
         addParam(u_z.getName(), u_z);
 
-        b_z = new Parameter(NdArray.zeros(Shape.of(1, hiddenSize)));
+        b_z = new ParameterV1(NdArray.zeros(Shape.of(1, hiddenSize)));
         b_z.setName("b_z");
         addParam(b_z.getName(), b_z);
 
         // 初始化重置门参数
         initWeight = NdArray.likeRandomN(Shape.of(inputSize, hiddenSize))
                 .mulNum((float) Math.sqrt(2.0 / (inputSize + hiddenSize)));
-        w_r = new Parameter(initWeight);
+        w_r = new ParameterV1(initWeight);
         w_r.setName("w_r");
         addParam(w_r.getName(), w_r);
 
         initWeight = NdArray.likeRandomN(Shape.of(hiddenSize, hiddenSize))
                 .mulNum((float) Math.sqrt(2.0 / (hiddenSize + hiddenSize)));
-        u_r = new Parameter(initWeight);
+        u_r = new ParameterV1(initWeight);
         u_r.setName("u_r");
         addParam(u_r.getName(), u_r);
 
-        b_r = new Parameter(NdArray.zeros(Shape.of(1, hiddenSize)));
+        b_r = new ParameterV1(NdArray.zeros(Shape.of(1, hiddenSize)));
         b_r.setName("b_r");
         addParam(b_r.getName(), b_r);
 
         // 初始化候选状态参数
         initWeight = NdArray.likeRandomN(Shape.of(inputSize, hiddenSize))
                 .mulNum((float) Math.sqrt(2.0 / (inputSize + hiddenSize)));
-        w_h = new Parameter(initWeight);
+        w_h = new ParameterV1(initWeight);
         w_h.setName("w_h");
         addParam(w_h.getName(), w_h);
 
         initWeight = NdArray.likeRandomN(Shape.of(hiddenSize, hiddenSize))
                 .mulNum((float) Math.sqrt(2.0 / (hiddenSize + hiddenSize)));
-        u_h = new Parameter(initWeight);
+        u_h = new ParameterV1(initWeight);
         u_h.setName("u_h");
         addParam(u_h.getName(), u_h);
 
-        b_h = new Parameter(NdArray.zeros(Shape.of(1, hiddenSize)));
+        b_h = new ParameterV1(NdArray.zeros(Shape.of(1, hiddenSize)));
         b_h.setName("b_h");
         addParam(b_h.getName(), b_h);
     }

@@ -1,9 +1,8 @@
 package io.leavesfly.tinyai.lora;
 
 import io.leavesfly.tinyai.ndarr.NdArray;
-import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Block;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import io.leavesfly.tinyai.nnet.layer.activate.ReLuLayer;
 
 import java.util.ArrayList;
@@ -216,8 +215,8 @@ public class LoraModel extends Block {
      *
      * @return LoRA参数映射
      */
-    public Map<String, Parameter> getAllLoraParameters() {
-        Map<String, Parameter> allLoraParams = new HashMap<>();
+    public Map<String, ParameterV1> getAllLoraParameters() {
+        Map<String, ParameterV1> allLoraParams = new HashMap<>();
         for (LoraLinearLayer layer : loraLayers) {
             allLoraParams.putAll(layer.getLoraParameters());
         }

@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Block;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.After;
@@ -28,7 +28,7 @@ import static org.junit.Assert.*;
  */
 public class ParameterManagerTest {
 
-    private Map<String, Parameter> testParameters;
+    private Map<String, ParameterV1> testParameters;
     private TestModel sourceModel;
     private TestModel targetModel;
     private String testDirectory;
@@ -38,19 +38,19 @@ public class ParameterManagerTest {
     public void setUp() throws IOException {
         // 创建测试参数
         testParameters = new HashMap<>();
-        testParameters.put("weight1", new Parameter(NdArray.of(new float[][]{{1.0f, 2.0f}, {3.0f, 4.0f}})));
-        testParameters.put("bias1", new Parameter(NdArray.of(new float[][]{{0.1f, 0.2f}})));
-        testParameters.put("weight2", new Parameter(NdArray.of(new float[][]{{5.0f}})));
+        testParameters.put("weight1", new ParameterV1(NdArray.of(new float[][]{{1.0f, 2.0f}, {3.0f, 4.0f}})));
+        testParameters.put("bias1", new ParameterV1(NdArray.of(new float[][]{{0.1f, 0.2f}})));
+        testParameters.put("weight2", new ParameterV1(NdArray.of(new float[][]{{5.0f}})));
         
         // 创建测试模型
         sourceModel = new TestModel();
         sourceModel.setParameters(new HashMap<>(testParameters));
         
         targetModel = new TestModel();
-        Map<String, Parameter> targetParams = new HashMap<>();
-        targetParams.put("weight1", new Parameter(NdArray.of(new float[][]{{0.0f, 0.0f}, {0.0f, 0.0f}})));
-        targetParams.put("bias1", new Parameter(NdArray.of(new float[][]{{0.0f, 0.0f}})));
-        targetParams.put("weight2", new Parameter(NdArray.of(new float[][]{{0.0f}})));
+        Map<String, ParameterV1> targetParams = new HashMap<>();
+        targetParams.put("weight1", new ParameterV1(NdArray.of(new float[][]{{0.0f, 0.0f}, {0.0f, 0.0f}})));
+        targetParams.put("bias1", new ParameterV1(NdArray.of(new float[][]{{0.0f, 0.0f}})));
+        targetParams.put("weight2", new ParameterV1(NdArray.of(new float[][]{{0.0f}})));
         targetModel.setParameters(targetParams);
         
         // 创建临时测试目录
@@ -81,7 +81,7 @@ public class ParameterManagerTest {
         assertTrue("参数文件大小应该大于0", paramsFile.length() > 0);
         
         // 加载参数
-        Map<String, Parameter> loadedParams = ParameterManager.loadParameters(paramsPath);
+        Map<String, ParameterV1> loadedParams = ParameterManager.loadParameters(paramsPath);
         
         assertNotNull("加载的参数不应为null", loadedParams);
         assertEquals("参数数量应该相同", testParameters.size(), loadedParams.size());
@@ -89,8 +89,8 @@ public class ParameterManagerTest {
         for (String paramName : testParameters.keySet()) {
             assertTrue("应包含参数: " + paramName, loadedParams.containsKey(paramName));
             
-            Parameter originalParam = testParameters.get(paramName);
-            Parameter loadedParam = loadedParams.get(paramName);
+            ParameterV1 originalParam = testParameters.get(paramName);
+            ParameterV1 loadedParam = loadedParams.get(paramName);
             
             assertEquals("参数形状应该相同: " + paramName,
                        originalParam.getValue().getShape(),
@@ -106,12 +106,12 @@ public class ParameterManagerTest {
         assertEquals("应该复制3个参数", 3, copiedCount);
         
         // 验证参数已被复制
-        Map<String, Parameter> sourceParams = sourceModel.getAllParams();
-        Map<String, Parameter> targetParams = targetModel.getAllParams();
+        Map<String, ParameterV1> sourceParams = sourceModel.getAllParams();
+        Map<String, ParameterV1> targetParams = targetModel.getAllParams();
         
         for (String paramName : sourceParams.keySet()) {
-            Parameter sourceParam = sourceParams.get(paramName);
-            Parameter targetParam = targetParams.get(paramName);
+            ParameterV1 sourceParam = sourceParams.get(paramName);
+            ParameterV1 targetParam = targetParams.get(paramName);
             
             // 检查参数值是否相同
             float[][] sourceMatrix = sourceParam.getValue().getMatrix();
@@ -128,9 +128,9 @@ public class ParameterManagerTest {
         
         // 创建参数不匹配的模型
         TestModel mismatchModel = new TestModel();
-        Map<String, Parameter> mismatchParams = new HashMap<>();
-        mismatchParams.put("weight1", new Parameter(NdArray.of(new float[][]{{1.0f}}))); // 形状不匹配
-        mismatchParams.put("extra_param", new Parameter(NdArray.of(new float[][]{{1.0f}}))); // 额外参数
+        Map<String, ParameterV1> mismatchParams = new HashMap<>();
+        mismatchParams.put("weight1", new ParameterV1(NdArray.of(new float[][]{{1.0f}}))); // 形状不匹配
+        mismatchParams.put("extra_param", new ParameterV1(NdArray.of(new float[][]{{1.0f}}))); // 额外参数
         mismatchModel.setParameters(mismatchParams);
         
         // 严格模式应该抛出异常
@@ -148,9 +148,9 @@ public class ParameterManagerTest {
         
         // 创建部分匹配的模型
         TestModel partialModel = new TestModel();
-        Map<String, Parameter> partialParams = new HashMap<>();
-        partialParams.put("weight1", new Parameter(NdArray.of(new float[][]{{0.0f, 0.0f}, {0.0f, 0.0f}}))); // 匹配
-        partialParams.put("different_shape", new Parameter(NdArray.of(new float[][]{{1.0f}}))); // 形状不匹配
+        Map<String, ParameterV1> partialParams = new HashMap<>();
+        partialParams.put("weight1", new ParameterV1(NdArray.of(new float[][]{{0.0f, 0.0f}, {0.0f, 0.0f}}))); // 匹配
+        partialParams.put("different_shape", new ParameterV1(NdArray.of(new float[][]{{1.0f}}))); // 形状不匹配
         partialModel.setParameters(partialParams);
         
         // 非严格模式应该成功复制匹配的参数
@@ -183,9 +183,9 @@ public class ParameterManagerTest {
         
         // 创建相同的模型
         TestModel sameModel = new TestModel();
-        Map<String, Parameter> sameParams = new HashMap<>();
-        for (Map.Entry<String, Parameter> entry : testParameters.entrySet()) {
-            Parameter originalParam = entry.getValue();
+        Map<String, ParameterV1> sameParams = new HashMap<>();
+        for (Map.Entry<String, ParameterV1> entry : testParameters.entrySet()) {
+            ParameterV1 originalParam = entry.getValue();
             float[][] originalMatrix = originalParam.getValue().getMatrix();
             
             // 创建相同值的参数
@@ -193,7 +193,7 @@ public class ParameterManagerTest {
             for (int i = 0; i < originalMatrix.length; i++) {
                 copyMatrix[i] = originalMatrix[i].clone();
             }
-            sameParams.put(entry.getKey(), new Parameter(NdArray.of(copyMatrix)));
+            sameParams.put(entry.getKey(), new ParameterV1(NdArray.of(copyMatrix)));
         }
         sameModel.setParameters(sameParams);
         
@@ -207,13 +207,13 @@ public class ParameterManagerTest {
         
         // 测试容忍度
         TestModel slightlyDifferentModel = new TestModel();
-        Map<String, Parameter> slightlyDifferentParams = new HashMap<>();
+        Map<String, ParameterV1> slightlyDifferentParams = new HashMap<>();
         slightlyDifferentParams.put("weight1", 
-                new Parameter(NdArray.of(new float[][]{{1.0001f, 2.0001f}, {3.0001f, 4.0001f}})));
+                new ParameterV1(NdArray.of(new float[][]{{1.0001f, 2.0001f}, {3.0001f, 4.0001f}})));
         slightlyDifferentParams.put("bias1", 
-                new Parameter(NdArray.of(new float[][]{{0.1001f, 0.2001f}})));
+                new ParameterV1(NdArray.of(new float[][]{{0.1001f, 0.2001f}})));
         slightlyDifferentParams.put("weight2", 
-                new Parameter(NdArray.of(new float[][]{{5.0001f}})));
+                new ParameterV1(NdArray.of(new float[][]{{5.0001f}})));
         slightlyDifferentModel.setParameters(slightlyDifferentParams);
         
         // 使用较大的容忍度应该相等
@@ -263,14 +263,14 @@ public class ParameterManagerTest {
     @Test
     public void testDeepCopyParameters() {
         // 测试深拷贝参数
-        Map<String, Parameter> copiedParams = ParameterManager.deepCopyParameters(testParameters);
+        Map<String, ParameterV1> copiedParams = ParameterManager.deepCopyParameters(testParameters);
         
         assertNotNull("拷贝的参数不应为null", copiedParams);
         assertEquals("参数数量应该相同", testParameters.size(), copiedParams.size());
         
         // 验证深拷贝：修改原始参数不应影响拷贝
-        Parameter originalParam = testParameters.get("weight1");
-        Parameter copiedParam = copiedParams.get("weight1");
+        ParameterV1 originalParam = testParameters.get("weight1");
+        ParameterV1 copiedParam = copiedParams.get("weight1");
         
         // 修改原始参数
         originalParam.getValue().set(999.0f, 0, 0);
@@ -280,7 +280,7 @@ public class ParameterManagerTest {
                        999.0f, copiedParam.getValue().getMatrix()[0][0]);
         
         // 测试null参数映射
-        Map<String, Parameter> nullCopy = ParameterManager.deepCopyParameters(null);
+        Map<String, ParameterV1> nullCopy = ParameterManager.deepCopyParameters(null);
         assertNull("null参数映射的拷贝应为null", nullCopy);
     }
 
@@ -289,24 +289,24 @@ public class ParameterManagerTest {
         // 测试参数筛选
         
         // 筛选weight参数
-        Map<String, Parameter> weightParams = ParameterManager.filterParameters(testParameters, "weight*");
+        Map<String, ParameterV1> weightParams = ParameterManager.filterParameters(testParameters, "weight*");
         assertEquals("应该找到2个weight参数", 2, weightParams.size());
         assertTrue("应包含weight1", weightParams.containsKey("weight1"));
         assertTrue("应包含weight2", weightParams.containsKey("weight2"));
         assertFalse("不应包含bias1", weightParams.containsKey("bias1"));
         
         // 筛选bias参数
-        Map<String, Parameter> biasParams = ParameterManager.filterParameters(testParameters, "bias*");
+        Map<String, ParameterV1> biasParams = ParameterManager.filterParameters(testParameters, "bias*");
         assertEquals("应该找到1个bias参数", 1, biasParams.size());
         assertTrue("应包含bias1", biasParams.containsKey("bias1"));
         
         // 筛选特定参数
-        Map<String, Parameter> specificParams = ParameterManager.filterParameters(testParameters, "weight1");
+        Map<String, ParameterV1> specificParams = ParameterManager.filterParameters(testParameters, "weight1");
         assertEquals("应该找到1个特定参数", 1, specificParams.size());
         assertTrue("应包含weight1", specificParams.containsKey("weight1"));
         
         // 筛选不存在的模式
-        Map<String, Parameter> noMatchParams = ParameterManager.filterParameters(testParameters, "nonexistent*");
+        Map<String, ParameterV1> noMatchParams = ParameterManager.filterParameters(testParameters, "nonexistent*");
         assertEquals("不匹配的模式应返回空映射", 0, noMatchParams.size());
     }
 
@@ -374,7 +374,7 @@ public class ParameterManagerTest {
      */
     private static class TestModel extends Model {
         
-        private Map<String, Parameter> parameters = new HashMap<>();
+        private Map<String, ParameterV1> parameters = new HashMap<>();
 
         public TestModel() {
             super("TestModel", new TestBlock());
@@ -385,15 +385,15 @@ public class ParameterManagerTest {
         }
 
         @Override
-        public Map<String, Parameter> getAllParams() {
+        public Map<String, ParameterV1> getAllParams() {
             // 结合 block 的参数和自定义参数
-            Map<String, Parameter> allParams = new HashMap<>();
+            Map<String, ParameterV1> allParams = new HashMap<>();
             allParams.putAll(super.getAllParams()); // block 的参数
             allParams.putAll(parameters); // 自定义参数
             return allParams;
         }
 
-        public void setParameters(Map<String, Parameter> parameters) {
+        public void setParameters(Map<String, ParameterV1> parameters) {
             this.parameters = parameters;
         }
     }

@@ -3,10 +3,8 @@ package io.leavesfly.tinyai.nnet;
 
 import io.leavesfly.tinyai.func.Function;
 import io.leavesfly.tinyai.func.Variable;
-import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,7 +27,7 @@ public abstract class LayerAble extends Function {
     /**
      * 层的参数集合，以参数名到Parameter对象的映射形式存储
      */
-    protected Map<String, Parameter> params;
+    protected Map<String, ParameterV1> params;
 
 
     /**
@@ -93,7 +91,7 @@ public abstract class LayerAble extends Function {
      *
      * @return 参数映射表
      */
-    public Map<String, Parameter> getParams() {
+    public Map<String, ParameterV1> getParams() {
         return params;
     }
 
@@ -103,7 +101,7 @@ public abstract class LayerAble extends Function {
      * @param paramName 参数名称
      * @param value     参数值
      */
-    public void addParam(String paramName, Parameter value) {
+    public void addParam(String paramName, ParameterV1 value) {
         getParams().put(name + "." + paramName, value);
     }
 
@@ -113,7 +111,7 @@ public abstract class LayerAble extends Function {
      * @param paramName 参数名称
      * @return 对应的参数对象
      */
-    public Parameter getParamBy(String paramName) {
+    public ParameterV1 getParamBy(String paramName) {
         return getParams().get(name + "." + paramName);
     }
 

@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.List;
 
@@ -24,13 +24,13 @@ public class LinearLayer extends Layer {
      * 权重参数矩阵
      * 形状: (input_size, output_size)
      */
-    private Parameter w;
+    private ParameterV1 w;
 
     /**
      * 偏置参数向量
      * 形状: (1, output_size)
      */
-    private Parameter b;
+    private ParameterV1 b;
 
 
     public LinearLayer(String _name) {
@@ -48,12 +48,12 @@ public class LinearLayer extends Layer {
     public LinearLayer(String _name, int hiddenRow, int hiddenCol, boolean needBias) {
         super(_name);
         NdArray initWeight = NdArray.likeRandomN(Shape.of(hiddenRow, hiddenCol)).mulNum(Math.sqrt((double) 1 / hiddenRow));
-        w = new Parameter(initWeight);
+        w = new ParameterV1(initWeight);
         w.setName("w");
         addParam(w.getName(), w);
 
         if (needBias) {
-            b = new Parameter(NdArray.zeros(Shape.of(1, hiddenCol)));
+            b = new ParameterV1(NdArray.zeros(Shape.of(1, hiddenCol)));
             b.setName("b");
             addParam(b.getName(), b);
         }

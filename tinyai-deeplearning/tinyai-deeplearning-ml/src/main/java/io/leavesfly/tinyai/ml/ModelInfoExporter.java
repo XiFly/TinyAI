@@ -1,7 +1,7 @@
 package io.leavesfly.tinyai.ml;
 
 import io.leavesfly.tinyai.ndarr.Shape;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -119,12 +119,12 @@ public class ModelInfoExporter {
             if (includeParameters) {
                 writer.println(",");
                 writer.println("  \"parameters\": {");
-                Map<String, Parameter> params = model.getAllParams();
+                Map<String, ParameterV1> params = model.getAllParams();
                 if (!params.isEmpty()) {
                     int count = 0;
-                    for (Map.Entry<String, Parameter> entry : params.entrySet()) {
+                    for (Map.Entry<String, ParameterV1> entry : params.entrySet()) {
                         boolean isLast = (++count == params.size());
-                        Parameter param = entry.getValue();
+                        ParameterV1 param = entry.getValue();
                         Shape shape = param.getValue().getShape();
 
                         writer.println("    \"" + entry.getKey() + "\": {");

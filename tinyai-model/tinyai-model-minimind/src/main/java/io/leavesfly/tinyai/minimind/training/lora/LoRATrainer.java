@@ -6,7 +6,7 @@ import io.leavesfly.tinyai.minimind.training.dataset.SFTDataset;
 import io.leavesfly.tinyai.ml.loss.SoftmaxCrossEntropy;
 import io.leavesfly.tinyai.ml.optimize.Adam;
 import io.leavesfly.tinyai.ndarr.NdArray;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.io.File;
 import java.io.IOException;
@@ -81,7 +81,7 @@ public class LoRATrainer {
         
         for (var entry : model.getAllParams().entrySet()) {
             String paramName = entry.getKey();
-            Parameter param = entry.getValue();
+            ParameterV1 param = entry.getValue();
             
             // 只保留名称中包含"lora"的参数梯度
             if (!paramName.toLowerCase().contains("lora")) {
@@ -247,7 +247,7 @@ public class LoRATrainer {
         // 计算LoRA参数的梯度范数
         for (var entry : model.getAllParams().entrySet()) {
             String paramName = entry.getKey();
-            Parameter param = entry.getValue();
+            ParameterV1 param = entry.getValue();
             
             if (paramName.toLowerCase().contains("lora") && param.getGrad() != null) {
                 NdArray grad = param.getGrad();
@@ -267,7 +267,7 @@ public class LoRATrainer {
             
             for (var entry : model.getAllParams().entrySet()) {
                 String paramName = entry.getKey();
-                Parameter param = entry.getValue();
+                ParameterV1 param = entry.getValue();
                 
                 if (paramName.toLowerCase().contains("lora") && param.getGrad() != null) {
                     NdArray grad = param.getGrad();
@@ -320,7 +320,7 @@ public class LoRATrainer {
         
         for (var entry : model.getAllParams().entrySet()) {
             String paramName = entry.getKey();
-            Parameter param = entry.getValue();
+            ParameterV1 param = entry.getValue();
             int paramCount = param.getValue().getShape().size();
             
             totalParams += paramCount;

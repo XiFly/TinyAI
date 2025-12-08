@@ -56,8 +56,8 @@ public abstract class Layer extends LayerAble {
 
     @Override
     public void clearGrads() {
-        for (Parameter parameter : params.values()) {
-            parameter.clearGrad();
+        for (ParameterV1 parameterV1 : params.values()) {
+            parameterV1.clearGrad();
         }
     }
 

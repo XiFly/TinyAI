@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.ml.exception.ParameterMismatchException;
 import io.leavesfly.tinyai.ml.util.ValidationUtils;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 /**
  * 参数操作接口
@@ -23,7 +23,7 @@ public class ParameterOperator {
      * @param target 目标参数
      * @throws ParameterMismatchException 如果形状不匹配
      */
-    public static void copyParameter(Parameter source, Parameter target) {
+    public static void copyParameter(ParameterV1 source, ParameterV1 target) {
         ValidationUtils.requireNonNull(source, "source parameter");
         ValidationUtils.requireNonNull(target, "target parameter");
         
@@ -31,7 +31,7 @@ public class ParameterOperator {
         NdArray targetData = target.getValue();
         
         ValidationUtils.requireShapeMatch(sourceData.getShape(), targetData.getShape(), 
-                                         "Parameter shape mismatch");
+                                         "ParameterV1 shape mismatch");
         
         // 使用底层数组进行批量复制（最高效）
         float[] sourceArray = sourceData.getArray();
@@ -48,7 +48,7 @@ public class ParameterOperator {
      * @param tolerance 容忍度（用于浮点数比较）
      * @return true 如果参数相等
      */
-    public static boolean compareParameter(Parameter param1, Parameter param2, double tolerance) {
+    public static boolean compareParameter(ParameterV1 param1, ParameterV1 param2, double tolerance) {
         if (param1 == null || param2 == null) {
             return param1 == param2;
         }
@@ -81,7 +81,7 @@ public class ParameterOperator {
      * @param param2 参数2
      * @return true 如果参数相等
      */
-    public static boolean compareParameter(Parameter param1, Parameter param2) {
+    public static boolean compareParameter(ParameterV1 param1, ParameterV1 param2) {
         return compareParameter(param1, param2, 1e-6);
     }
     
@@ -91,7 +91,7 @@ public class ParameterOperator {
      * @param param 参数
      * @return 统计信息
      */
-    public static ParameterStatistics getStatistics(Parameter param) {
+    public static ParameterStatistics getStatistics(ParameterV1 param) {
         ValidationUtils.requireNonNull(param, "parameter");
         
         NdArray data = param.getValue();

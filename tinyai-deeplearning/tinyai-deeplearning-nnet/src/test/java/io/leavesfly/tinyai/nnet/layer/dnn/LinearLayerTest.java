@@ -3,7 +3,7 @@ package io.leavesfly.tinyai.nnet.layer.dnn;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,8 +35,8 @@ public class LinearLayerTest {
     @Test
     public void testParameterInitializationWithBias() {
         // 测试带偏置层的参数初始化
-        Parameter wParam = linearWithBias.getParamBy("w");
-        Parameter bParam = linearWithBias.getParamBy("b");
+        ParameterV1 wParam = linearWithBias.getParamBy("w");
+        ParameterV1 bParam = linearWithBias.getParamBy("b");
 
         assertNotNull("权重参数应该被初始化", wParam);
         assertNotNull("偏置参数应该被初始化", bParam);
@@ -57,8 +57,8 @@ public class LinearLayerTest {
     @Test
     public void testParameterInitializationWithoutBias() {
         // 测试不带偏置层的参数初始化
-        Parameter wParam = linearWithoutBias.getParamBy("w");
-        Parameter bParam = linearWithoutBias.getParamBy("b");
+        ParameterV1 wParam = linearWithoutBias.getParamBy("w");
+        ParameterV1 bParam = linearWithoutBias.getParamBy("b");
 
         assertNotNull("权重参数应该被初始化", wParam);
         assertNull("偏置参数不应该被初始化", bParam);
@@ -113,7 +113,7 @@ public class LinearLayerTest {
         LinearLayer simpleLinear = new LinearLayer("simple", 1, 1, false);
 
         // 手动设置权重为3
-        Parameter wParam = simpleLinear.getParamBy("w");
+        ParameterV1 wParam = simpleLinear.getParamBy("w");
         wParam.getValue().set(3.0f, 0, 0);
 
         // 输入为2
@@ -132,8 +132,8 @@ public class LinearLayerTest {
         LinearLayer simpleLinear = new LinearLayer("simple_bias", 1, 1, true);
 
         // 手动设置权重为3，偏置为2
-        Parameter wParam = simpleLinear.getParamBy("w");
-        Parameter bParam = simpleLinear.getParamBy("b");
+        ParameterV1 wParam = simpleLinear.getParamBy("w");
+        ParameterV1 bParam = simpleLinear.getParamBy("b");
         wParam.getValue().set(3.0f, 0, 0);
         bParam.getValue().set(2.0f, 0, 0);
 
@@ -150,7 +150,7 @@ public class LinearLayerTest {
     @Test
     public void testXavierInitialization() {
         // 测试Xavier初始化
-        Parameter wParam = linearWithBias.getParamBy("w");
+        ParameterV1 wParam = linearWithBias.getParamBy("w");
         NdArray weights = wParam.getValue();
 
         // Xavier初始化应该产生合理范围内的权重
@@ -238,7 +238,7 @@ public class LinearLayerTest {
         LinearLayer testLinear = new LinearLayer("test", 3, 2, false);
 
         // 手动设置权重
-        Parameter wParam = testLinear.getParamBy("w");
+        ParameterV1 wParam = testLinear.getParamBy("w");
         float[][] weightData = {{1, 2}, {3, 4}, {5, 6}};
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 2; j++) {

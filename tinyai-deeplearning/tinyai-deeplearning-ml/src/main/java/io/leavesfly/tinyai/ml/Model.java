@@ -6,7 +6,8 @@ import io.leavesfly.tinyai.ml.inference.Translator;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Block;
-import io.leavesfly.tinyai.nnet.Parameter; // V1 Parameter (for backward compatibility)
+import io.leavesfly.tinyai.nnet.ParameterV1; // V1 ParameterV1 (for backward compatibility)
+import io.leavesfly.tinyai.nnet.V2ParameterProxy; // V2 Parameter 的代理类
 import io.leavesfly.tinyai.nnet.v2.adapter.BlockModuleAdapter;
 import io.leavesfly.tinyai.nnet.v2.core.Module;
 
@@ -300,22 +301,29 @@ public class Model implements Serializable {
      * 获取所有参数（V1 兼容接口）
      * 返回 V1 格式的参数映射，用于向后兼容
      *
-     * @return 参数映射（V1 Parameter 格式）
+     * @return 参数映射（V1 ParameterV1 格式）
      */
-    public Map<String, Parameter> getAllParams() {
-        // 将 V2 Parameter 转换为 V1 Parameter 格式
+    public Map<String, ParameterV1> getAllParams() {
+        // 如果是通过 BlockModuleAdapter 适配的 V1 Block，直接返回 Block 内部的原始参数
+        // 这确保 SGD 等优化器更新的是实际使用的参数，而不是临时创建的副本
+        if (module instanceof BlockModuleAdapter) {
+            BlockModuleAdapter adapter = (BlockModuleAdapter) module;
+            Block block = adapter.getBlock();
+            if (block != null) {
+                return block.getAllParams();
+            }
+        }
+        
+        // 对于纯 V2 Module，使用 V2ParameterProxy 包装 V2 Parameter
+        // V2ParameterProxy 会在 setValue 时同步更新原始的 V2 Parameter
         Map<String, io.leavesfly.tinyai.nnet.v2.core.Parameter> v2Params = module.namedParameters();
-        Map<String, Parameter> v1Params = new java.util.HashMap<>();
+        Map<String, ParameterV1> v1Params = new java.util.HashMap<>();
         
         for (Map.Entry<String, io.leavesfly.tinyai.nnet.v2.core.Parameter> entry : v2Params.entrySet()) {
             io.leavesfly.tinyai.nnet.v2.core.Parameter v2Param = entry.getValue();
             if (v2Param != null) {
-                // 创建 V1 Parameter
-                Parameter v1Param = new Parameter(v2Param.data());
-                if (v2Param.grad() != null) {
-                    v1Param.setGrad(v2Param.grad());
-                }
-                v1Param.setRequireGrad(v2Param.requiresGrad());
+                // 使用代理类，确保参数更新能同步回原始 V2 Parameter
+                ParameterV1 v1Param = new V2ParameterProxy(v2Param);
                 v1Params.put(entry.getKey(), v1Param);
             }
         }
@@ -327,7 +335,7 @@ public class Model implements Serializable {
      * 获取所有参数（V2 接口）
      * 返回 V2 格式的参数映射
      *
-     * @return 参数映射（V2 Parameter 格式）
+     * @return 参数映射（V2 ParameterV1 格式）
      */
     public Map<String, io.leavesfly.tinyai.nnet.v2.core.Parameter> getAllParamsV2() {
         return module.namedParameters();

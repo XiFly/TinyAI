@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.Layer;
-import io.leavesfly.tinyai.nnet.Parameter;
+import io.leavesfly.tinyai.nnet.ParameterV1;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ import java.util.List;
 public class RMSNormLayer extends Layer {
     
     /** 缩放权重参数 */
-    private Parameter weight;
+    private ParameterV1 weight;
     
     /** 方差的小常数，防止除零 */
     private double eps;
@@ -62,7 +62,7 @@ public class RMSNormLayer extends Layer {
         if (!alreadyInit) {
             // 初始化权重为1
             NdArray weightData = NdArray.ones(Shape.of(hiddenSize));
-            weight = new Parameter(weightData);
+            weight = new ParameterV1(weightData);
             weight.setName("weight");
             addParam(weight.getName(), weight);
             
@@ -169,7 +169,7 @@ public class RMSNormLayer extends Layer {
     /**
      * 获取权重参数
      */
-    public Parameter getWeight() {
+    public ParameterV1 getWeight() {
         return weight;
     }
 
