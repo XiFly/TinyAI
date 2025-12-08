@@ -35,12 +35,6 @@
             <artifactId>tinyai-agent-multi</artifactId>
         </dependency>
         
-        <!-- V2版本新增依赖 -->
-        <dependency>
-            <groupId>io.leavesfly.tinyai</groupId>
-            <artifactId>tinyai-agent-cursor</artifactId>
-        </dependency>
-        
         <dependency>
             <groupId>io.leavesfly.tinyai</groupId>
             <artifactId>tinyai-agent-rag</artifactId>

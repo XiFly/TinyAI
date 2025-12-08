@@ -128,12 +128,6 @@
 
             <dependency>
                 <groupId>io.leavesfly.tinyai</groupId>
-                <artifactId>tinyai-agent-cursor</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.leavesfly.tinyai</groupId>
                 <artifactId>tinyai-agent-rag</artifactId>
                 <version>${project.version}</version>
             </dependency>
