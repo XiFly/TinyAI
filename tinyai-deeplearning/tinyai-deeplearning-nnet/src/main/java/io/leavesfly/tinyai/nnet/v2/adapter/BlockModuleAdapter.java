@@ -5,6 +5,7 @@ import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.v1.Block;
 import io.leavesfly.tinyai.nnet.v1.ParameterV1;
 import io.leavesfly.tinyai.nnet.v2.core.Module;
+import io.leavesfly.tinyai.nnet.v2.core.Parameter;
 
 import java.util.Map;
 
@@ -77,8 +78,7 @@ public class BlockModuleAdapter extends Module {
                 // V1 ParameterV1 通过 isRequireGrad() 方法获取是否需要梯度
                 boolean requiresGrad = v1Param.isRequireGrad();
                 
-                io.leavesfly.tinyai.nnet.v2.core.Parameter v2Param = 
-                    new io.leavesfly.tinyai.nnet.v2.core.Parameter(v1Param.getValue(), requiresGrad);
+                Parameter v2Param = new Parameter(v1Param.getValue(), requiresGrad);
                 // 如果 V1 ParameterV1 有梯度，复制梯度
                 if (v1Param.getGrad() != null) {
                     v2Param.setGrad(v1Param.getGrad());

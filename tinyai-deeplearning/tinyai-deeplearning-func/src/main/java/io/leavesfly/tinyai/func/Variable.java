@@ -29,6 +29,39 @@ public class Variable implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    // =============================================================================
+    // 常量定义
+    // =============================================================================
+    
+    /**
+     * 激活函数默认参数 - LeakyReLU 负斜率
+     */
+    public static final float DEFAULT_LEAKY_RELU_SLOPE = 0.01f;
+    
+    /**
+     * 激活函数默认参数 - ELU alpha 参数
+     */
+    public static final float DEFAULT_ELU_ALPHA = 1.0f;
+    
+    /**
+     * 归一化默认参数 - RMS Norm epsilon 值
+     */
+    public static final float DEFAULT_RMS_NORM_EPS = 1e-6f;
+    
+    /**
+     * LogSoftmax 默认计算轴
+     */
+    public static final int DEFAULT_LOG_SOFTMAX_AXIS = -1;
+    
+    /**
+     * 下三角矩阵默认对角线偏移
+     */
+    public static final int DEFAULT_TRIL_DIAGONAL = 0;
+
+    // =============================================================================
+    // 核心字段
+    // =============================================================================
+
     /**
      * 变量的名称
      * 用于标识变量，便于调试和可视化
@@ -317,6 +350,12 @@ public class Variable implements Serializable {
 
     /**
      * 为多输出函数构造上游梯度列表
+     * <p>
+     * 该方法用于处理具有多个输出的函数(如split操作)的反向传播
+     * 
+     * @param creatorFunc 创建当前变量的函数
+     * @param currentVar 当前正在反向传播的变量
+     * @return 所有输出变量的梯度列表
      */
     private List<NdArray> buildOutputGradsForMulti(Function creatorFunc, Variable currentVar) {
         Variable[] outs = creatorFunc.getOutputs();
@@ -361,22 +400,50 @@ public class Variable implements Serializable {
         grad = null;
     }
 
+    /**
+     * 获取变量的值
+     * 
+     * @return 变量的NdArray值
+     */
     public NdArray getValue() {
         return value;
     }
 
+    /**
+     * 切断计算图连接
+     * <p>
+     * 将creator设置为null,断开与前驱节点的连接
+     */
     private void unChain() {
         creator = null;
     }
 
+    /**
+     * 设置变量的值
+     * 
+     * @param value 新的NdArray值
+     */
     public void setValue(NdArray value) {
         this.value = value;
     }
 
+    /**
+     * 获取变量的梯度
+     * 
+     * @return 变量的梯度,如果未计算则为null
+     */
     public NdArray getGrad() {
         return grad;
     }
 
+    /**
+     * 设置变量的梯度
+     * <p>
+     * 梯度的形状必须与变量值的形状一致
+     * 
+     * @param _grad 要设置的梯度
+     * @throws RuntimeException 当梯度形状与变量形状不匹配时抛出
+     */
     public void setGrad(NdArray _grad) {
         if (_grad == null) {
             return;
@@ -391,30 +458,63 @@ public class Variable implements Serializable {
         }
     }
 
+    /**
+     * 获取变量的形状
+     * 
+     * @return 变量的Shape对象
+     */
     public Shape getShape() {
         return value.getShape();
     }
 
+    /**
+     * 获取创建该变量的函数
+     * 
+     * @return 创建函数,如果是叶子节点则为null
+     */
     public Function getCreator() {
         return creator;
     }
 
+    /**
+     * 设置创建该变量的函数
+     * <p>
+     * 用于构建计算图,记录变量的创建来源
+     * 
+     * @param creator 创建函数
+     */
     public void setCreator(Function creator) {
         this.creator = creator;
     }
 
+    /**
+     * 获取变量名称
+     * 
+     * @return 变量名称
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * 设置变量名称
+     * <p>
+     * 支持链式调用
+     * 
+     * @param name 变量名称
+     * @return 当前Variable实例
+     */
     public Variable setName(String name) {
         this.name = name;
         return this;
     }
 
-    //    # =============================================================================
-//            # 1，四则运算
-//    # =============================================================================
+    // =============================================================================
+    // 四则运算操作
+    // =============================================================================
+    // 提供基础的算术运算:加、减、乘、除、取反
+    // 所有运算都会创建新的Variable并构建计算图以支持自动微分
+    // =============================================================================
 
     /**
      * 加法运算
@@ -480,9 +580,12 @@ public class Variable implements Serializable {
         return function.call(this);
     }
 
-    //    # =============================================================================
-//            # 2，基本数学函数
-//    # =============================================================================
+    // =============================================================================
+    // 数学函数操作
+    // =============================================================================
+    // 提供常用数学函数:指数、对数、三角函数、激活函数等
+    // 包括:exp, log, sin, cos, tanh, sigmoid, relu, gelu等
+    // =============================================================================
 
     /**
      * 平方运算
@@ -651,7 +754,7 @@ public class Variable implements Serializable {
      * @return LeakyReLU运算结果的新变量
      */
     public Variable leakyRelu() {
-        return leakyRelu(0.01f);
+        return leakyRelu(DEFAULT_LEAKY_RELU_SLOPE);
     }
 
     /**
@@ -674,7 +777,7 @@ public class Variable implements Serializable {
      * @return ELU运算结果的新变量
      */
     public Variable elu() {
-        return elu(1.0f);
+        return elu(DEFAULT_ELU_ALPHA);
     }
 
     /**
@@ -697,7 +800,7 @@ public class Variable implements Serializable {
      * @return LogSoftmax运算结果的新变量
      */
     public Variable logSoftmax() {
-        return logSoftmax(-1);
+        return logSoftmax(DEFAULT_LOG_SOFTMAX_AXIS);
     }
 
     /**
@@ -782,9 +885,14 @@ public class Variable implements Serializable {
         return function.call(this);
     }
 
-    //    # =============================================================================
-//            # 3，张量的变形操作
-//    # =============================================================================
+    // =============================================================================
+    // 张量形状与矩阵操作
+    // =============================================================================
+    // 提供张量形状变换和矩阵运算:
+    // - 形状变换: reshape, transpose, squeeze, broadcast等
+    // - 矩阵运算: matmul, bmm(批量矩阵乘法)
+    // - 归约运算: sum, mean, max, min等
+    // =============================================================================
 
     /**
      * 广播操作
@@ -893,9 +1001,11 @@ public class Variable implements Serializable {
         return function.call(this);
     }
 
-    //    # =============================================================================
-//            # 4，loss函数
-//    # =============================================================================
+    // =============================================================================
+    // 损失函数
+    // =============================================================================
+    // 提供常用的损失函数计算
+    // =============================================================================
 
     /**
      * 均方误差损失
@@ -922,9 +1032,16 @@ public class Variable implements Serializable {
         return new SoftmaxCE().call(this, other);
     }
 
-    //    # =============================================================================
-//            # 5，新增算子（支持Transformer/LLM训练）
-//    # =============================================================================
+    // =============================================================================
+    // 高级算子 - Transformer/LLM支持
+    // =============================================================================
+    // 为大语言模型训练提供的专用算子:
+    // - squeeze/detach/clone等张量操作
+    // - expand/repeat等广播操作
+    // - tril/bmm等矩阵操作
+    // - indexSelect/scatterAdd等索引操作
+    // - rmsNorm等归一化操作
+    // =============================================================================
 
     /**
      * 压缩维度
@@ -1042,7 +1159,7 @@ public class Variable implements Serializable {
      * @return 下三角矩阵
      */
     public Variable tril() {
-        return tril(0);
+        return tril(DEFAULT_TRIL_DIAGONAL);
     }
 
     /**
@@ -1125,11 +1242,16 @@ public class Variable implements Serializable {
      * @return RMS归一化结果
      */
     public Variable rmsNorm(int[] normalizedShape, Variable weight) {
-        return rmsNorm(normalizedShape, 1e-6f, weight);
+        return rmsNorm(normalizedShape, DEFAULT_RMS_NORM_EPS, weight);
     }
 
     // =============================================================================
-    // 额外的工具方法 - 支持 Module 中完全停留在 Variable 世界
+    // 工具方法 - PyTorch风格API
+    // =============================================================================
+    // 提供与PyTorch类似的便捷方法,减少对NdArray的直接访问:
+    // - fullLike/onesLike/zerosLike等创建方法
+    // - maskedFill等条件填充
+    // - shape/dtype等属性访问
     // =============================================================================
 
     /**
@@ -1210,7 +1332,11 @@ public class Variable implements Serializable {
     }
 
     // =============================================================================
-    // 高级索引和切片操作 - 进一步减少对 NdArray 的直接访问
+    // 索引与切片操作
+    // =============================================================================
+    // 提供灵活的张量索引和切片能力:
+    // - slice/select/sliceRange等切片操作
+    // - cat/split等拼接分割操作
     // =============================================================================
 
     /**
@@ -1373,7 +1499,11 @@ public class Variable implements Serializable {
     }
 
     // =============================================================================
-    // 比较和随机操作 - 支持 v1 层优化
+    // 比较与随机操作
+    // =============================================================================
+    // 提供比较运算和随机张量生成:
+    // - gt/lt/eq等比较操作
+    // - rand/randn等随机生成
     // =============================================================================
 
     /**
@@ -1436,7 +1566,8 @@ public class Variable implements Serializable {
         return result;
     }
 
-    /**创建标准正态分布随机张量
+    /**
+     * 创建标准正态分布随机张量
      * <p>
      * 类似 PyTorch 的 torch.randn
      *
