@@ -116,7 +116,7 @@ public class DeepSeekR1RLHFTrainer {
             float totalReward = rewardWeight * avgHumanReward + qualityWeight * qualityReward;
             
             // 构建损失：负奖励（最大化奖励）
-            Variable rewardVar = new Variable(NdArray.scalar(-totalReward));
+            Variable rewardVar = new Variable(NdArray.of(-totalReward));
             
             // 反向传播
             model.clearGrads();
