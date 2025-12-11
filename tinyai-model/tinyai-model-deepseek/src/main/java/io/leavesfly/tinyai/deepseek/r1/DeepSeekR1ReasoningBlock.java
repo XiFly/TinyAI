@@ -166,21 +166,17 @@ public class DeepSeekR1ReasoningBlock extends Module {
      * @return 置信度分数 [0, 1]
      */
     private double evaluateConfidence(Variable hiddenState) {
-        // 使用序列最后一个位置的隐藏状态
+        // ✅ 使用Variable算子提取序列最后一个位置的隐藏状态
         NdArray hiddenData = hiddenState.getValue();
         int batchSize = hiddenData.getShape().getDimension(0);
         int seqLen = hiddenData.getShape().getDimension(1);
         int hiddenDim = hiddenData.getShape().getDimension(2);
         
-        // 提取最后一个token的隐藏状态 [batch_size, 1, hidden_dim]
-        NdArray lastHidden = NdArray.of(Shape.of(batchSize, 1, hiddenDim));
-        for (int b = 0; b < batchSize; b++) {
-            for (int d = 0; d < hiddenDim; d++) {
-                lastHidden.set(hiddenData.get(b, seqLen - 1, d), b, 0, d);
-            }
-        }
-        
-        Variable lastHiddenVar = new Variable(lastHidden);
+        // 使用slice提取最后一个时间步: [batch_size, seq_len, hidden_dim] -> [batch_size, 1, hidden_dim]
+        Variable lastHiddenVar = hiddenState.slice(
+            new int[]{0, seqLen - 1, 0},
+            new int[]{batchSize, seqLen, hiddenDim}
+        );
         
         // 投影到置信度分数
         Variable confidenceScore = confidenceProjection.forward(lastHiddenVar);

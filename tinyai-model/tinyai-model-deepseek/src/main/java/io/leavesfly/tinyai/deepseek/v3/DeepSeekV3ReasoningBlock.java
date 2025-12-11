@@ -214,30 +214,23 @@ public class DeepSeekV3ReasoningBlock extends Module {
      * 应用自我纠错机制
      */
     private Variable applySelfCorrection(Variable output, Variable originalInput) {
+        // ✅ 使用Variable算术运算算子替代循环
         // 简化的自我纠错：将输出和原始输入进行加权组合
         // 置信度低时更多地保留原始输入信息
         float correctionWeight = 0.3f;
         
-        NdArray outputArray = output.getValue();
-        NdArray inputArray = originalInput.getValue();
+        // corrected = (1 - correctionWeight) * output + correctionWeight * originalInput
+        // 使用Variable的算术运算算子
+        Variable weight1 = new Variable(1.0f - correctionWeight);
+        Variable weight2 = new Variable(correctionWeight);
+        weight1.setRequireGrad(false);
+        weight2.setRequireGrad(false);
         
-        int batchSize = outputArray.getShape().getDimension(0);
-        int seqLen = outputArray.getShape().getDimension(1);
-        int nEmbd = outputArray.getShape().getDimension(2);
+        Variable scaledOutput = output.mul(weight1);
+        Variable scaledInput = originalInput.mul(weight2);
+        Variable corrected = scaledOutput.add(scaledInput);
         
-        float[][][] correctedData = new float[batchSize][seqLen][nEmbd];
-        for (int b = 0; b < batchSize; b++) {
-            for (int t = 0; t < seqLen; t++) {
-                for (int d = 0; d < nEmbd; d++) {
-                    float outputVal = outputArray.get(b, t, d);
-                    float inputVal = inputArray.get(b, t, d);
-                    correctedData[b][t][d] = (1 - correctionWeight) * outputVal + 
-                                             correctionWeight * inputVal;
-                }
-            }
-        }
-        
-        return new Variable(NdArray.of(correctedData));
+        return corrected;
     }
     
     /**
