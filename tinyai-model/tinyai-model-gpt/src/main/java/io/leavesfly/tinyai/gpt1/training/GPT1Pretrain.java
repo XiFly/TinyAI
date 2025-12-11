@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.gpt1.GPT1Config;
 import io.leavesfly.tinyai.gpt1.GPT1Model;
 import io.leavesfly.tinyai.ml.loss.SoftmaxCrossEntropy;
-import io.leavesfly.tinyai.ml.optimize.Adam;
+import io.leavesfly.tinyai.ml.optimize.SGD;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.nnet.v1.ParameterV1;
 
@@ -35,7 +35,7 @@ public class GPT1Pretrain {
     private final GPT1Config config;
     private final GPT1Dataset dataset;
     private final SoftmaxCrossEntropy lossFunction;
-    private final Adam optimizer;
+    private final SGD optimizer;
     
     // 训练超参数
     private int maxEpochs;
@@ -75,8 +75,8 @@ public class GPT1Pretrain {
         this.saveInterval = 5000;
         this.checkpointDir = "./checkpoints/gpt1_pretrain";
         
-        // 创建优化器(Adam, beta1=0.9, beta2=0.999)
-        this.optimizer = new Adam(model, initialLearningRate, 0.9f, 0.999f, 1e-8f);
+        // 创建优化器(SGD节省内存，避免Adam大量临时对象)
+        this.optimizer = new SGD(model, initialLearningRate);
         
         // 初始化状态
         this.currentEpoch = 0;
@@ -216,9 +216,19 @@ public class GPT1Pretrain {
         // 前向传播
         Variable logits = model.predict(inputVar);
         
+        // 重塑为2D以计算损失
+        // logits: (batch_size, seq_len, vocab_size) -> (batch_size * seq_len, vocab_size)
+        // targets: (batch_size, seq_len) -> (batch_size * seq_len, 1)
+        NdArray logitsArray = logits.getValue();
+        int batchSize = logitsArray.getShape().getDimension(0);
+        int seqLen = logitsArray.getShape().getDimension(1);
+        int vocabSize = logitsArray.getShape().getDimension(2);
+        
+        Variable reshapedLogits = logits.reshape(io.leavesfly.tinyai.ndarr.Shape.of(batchSize * seqLen, vocabSize));
+        Variable reshapedTargets = new Variable(targetIds.reshape(io.leavesfly.tinyai.ndarr.Shape.of(batchSize * seqLen, 1)));
+        
         // 计算损失
-        Variable targetVar = new Variable(targetIds);
-        Variable loss = lossFunction.loss(targetVar, logits);
+        Variable loss = lossFunction.loss(reshapedTargets, reshapedLogits);
         
         float lossValue = loss.getValue().getNumber().floatValue();
         

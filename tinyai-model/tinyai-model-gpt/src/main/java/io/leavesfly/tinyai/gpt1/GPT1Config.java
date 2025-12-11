@@ -1,5 +1,7 @@
 package io.leavesfly.tinyai.gpt1;
 
+import java.io.Serializable;
+
 /**
  * GPT-1模型配置类
  * 
@@ -17,7 +19,9 @@ package io.leavesfly.tinyai.gpt1;
  * @author leavesfly
  * @version 1.0
  */
-public class GPT1Config {
+public class GPT1Config implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
     
     // ==================== 基础模型配置 ====================
     

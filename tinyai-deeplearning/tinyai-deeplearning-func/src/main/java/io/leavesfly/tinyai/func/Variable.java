@@ -236,6 +236,16 @@ public class Variable implements Serializable {
         return value.getShape().getDimNum() == 1;
     }
 
+    // 访问标记，防止重复处理
+    private static java.util.Set<Variable> visitedInBackward = new java.util.HashSet<>();
+    
+    /**
+     * 重置反向传播访问标记
+     */
+    public static void resetBackwardCounter() {
+        visitedInBackward.clear();
+    }
+    
     /**
      * 变量的反向传播（递归实现）
      * <p>
@@ -245,6 +255,22 @@ public class Variable implements Serializable {
      * 然后递归地调用生成该变量的函数的backward方法计算输入变量的梯度。
      */
     public void backward() {
+        // 重置访问记录，避免内存泄漏
+        visitedInBackward.clear();
+        backwardInternal();
+        // backward完成后立即清空，释放引用
+        visitedInBackward.clear();
+    }
+    
+    /**
+     * 内部递归backward实现
+     */
+    private void backwardInternal() {
+        // 如果已经访问过，跳过（防止重复处理共享变量）
+        if (visitedInBackward.contains(this)) {
+            return;
+        }
+        visitedInBackward.add(this);
 
         if (!requireGrad) {
             this.grad = null;
@@ -258,6 +284,7 @@ public class Variable implements Serializable {
         Function _creator = creator;
         if (!Objects.isNull(_creator)) {
             Variable[] _inputs = _creator.getInputs();
+            
             List<NdArray> grads = _creator.isMultiOutput()
                     ? buildOutputGradsForMulti(_creator, this)
                     : _creator.backward(grad);
@@ -279,7 +306,7 @@ public class Variable implements Serializable {
                 } else {
                     input.setGrad(inputGrad);
                 }
-                input.backward();
+                input.backwardInternal();
                 index++;
             }
         }

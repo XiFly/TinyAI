@@ -33,16 +33,22 @@ public class SoftMax extends Function {
      * <p>
      * 对于SoftMax函数，梯度计算公式为：
      * ∂softmax(x_i)/∂x_j = softmax(x_i) * (δ_ij - softmax(x_j))
+     * 支持多维张量，沿最后一维进行计算。
      *
      * @param yGrad 输出变量的梯度
      * @return 输入变量的梯度列表
      */
     @Override
     public List<NdArray> backward(NdArray yGrad) {
-
         NdArray y = getOutput().getValue();
         NdArray gx = y.mul(yGrad);
-        NdArray sumDx = gx.sumTo(Shape.of(gx.getShape().getRow(), 1)).broadcastTo(gx.getShape());
+        
+        // 构造目标形状：将最后一维压缩为1，用于沿最后一维求和
+        int[] dims = gx.getShape().getShapeDims();
+        int[] sumDims = dims.clone();
+        sumDims[sumDims.length - 1] = 1;
+        
+        NdArray sumDx = gx.sumTo(Shape.of(sumDims)).broadcastTo(gx.getShape());
         gx = gx.sub(y.mul(sumDx));
         return Collections.singletonList(gx);
     }

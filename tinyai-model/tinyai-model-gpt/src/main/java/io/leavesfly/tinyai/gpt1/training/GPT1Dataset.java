@@ -318,14 +318,18 @@ public class GPT1Dataset {
         public String decode(int[] ids) {
             StringBuilder sb = new StringBuilder();
             for (int id : ids) {
+                String token;
                 if (idx2word.containsKey(id)) {
-                    String token = idx2word.get(id);
-                    if (!token.startsWith("<") && sb.length() > 0) {
-                        sb.append(" ");
-                    }
-                    if (!token.equals("<PAD>") && !token.equals("<BOS>") && !token.equals("<EOS>")) {
-                        sb.append(token);
-                    }
+                    token = idx2word.get(id);
+                } else {
+                    token = "<" + id + ">";  // 显示未知token的id
+                }
+                
+                if (!token.startsWith("<") && sb.length() > 0) {
+                    sb.append(" ");
+                }
+                if (!token.equals("<PAD>") && !token.equals("<BOS>") && !token.equals("<EOS>")) {
+                    sb.append(token);
                 }
             }
             return sb.toString().trim();

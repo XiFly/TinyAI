@@ -13,24 +13,40 @@ import io.leavesfly.tinyai.ndarr.cpu.utils.IndexConverter;
 public class TransformationOperations {
 
     /**
-     * 矩阵转置操作（二维矩阵），行列互换
+     * 矩阵转置操作，交换最后两个维度
+     * <p>对于二维矩阵，行列互换；对于多维数组，交换最后两个维度</p>
      *
      * @param array 数组
-     * @return 转置后的矩阵
-     * @throws IllegalArgumentException 当数组不是矩阵时抛出
+     * @return 转置后的数组
+     * @throws IllegalArgumentException 当数组维度小于2时抛出
      */
     public static NdArrayCpu transpose(NdArrayCpu array) {
-        if (array.shape.getDimNum() != 2) {
-            throw new IllegalArgumentException("操作仅适用于二维矩阵");
+        int dimNum = array.shape.getDimNum();
+        
+        if (dimNum < 2) {
+            throw new IllegalArgumentException("转置操作至少需要二维数组");
         }
-        NdArrayCpu result = new NdArrayCpu(ShapeCpu.of(array.shape.getColumn(), array.shape.getRow()));
-
-        for (int i = 0; i < array.shape.getRow(); i++) {
-            for (int j = 0; j < array.shape.getColumn(); j++) {
-                result.buffer[j * array.shape.getRow() + i] = array.buffer[i * array.shape.getColumn() + j];
+        
+        if (dimNum == 2) {
+            // 二维矩阵：行列互换（原有优化逻辑）
+            NdArrayCpu result = new NdArrayCpu(ShapeCpu.of(array.shape.getColumn(), array.shape.getRow()));
+            for (int i = 0; i < array.shape.getRow(); i++) {
+                for (int j = 0; j < array.shape.getColumn(); j++) {
+                    result.buffer[j * array.shape.getRow() + i] = array.buffer[i * array.shape.getColumn() + j];
+                }
             }
+            return result;
         }
-        return result;
+        
+        // 多维数组：交换最后两个维度
+        int[] order = new int[dimNum];
+        for (int i = 0; i < dimNum - 2; i++) {
+            order[i] = i;  // 前面的维度保持不变
+        }
+        order[dimNum - 2] = dimNum - 1;  // 倒数第二维与最后一维交换
+        order[dimNum - 1] = dimNum - 2;
+        
+        return transpose(array, order);
     }
 
     /**

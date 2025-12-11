@@ -4,8 +4,9 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.gpt1.GPT1Config;
 import io.leavesfly.tinyai.gpt1.GPT1Model;
 import io.leavesfly.tinyai.ml.loss.SoftmaxCrossEntropy;
-import io.leavesfly.tinyai.ml.optimize.Adam;
+import io.leavesfly.tinyai.ml.optimize.SGD;
 import io.leavesfly.tinyai.ndarr.NdArray;
+import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.v1.ParameterV1;
 
 import java.io.File;
@@ -36,7 +37,7 @@ public class GPT1Finetune {
     private final GPT1Dataset trainDataset;
     private final GPT1Dataset valDataset;
     private final SoftmaxCrossEntropy lossFunction;
-    private final Adam optimizer;
+    private final SGD optimizer;
     
     // 微调超参数(与预训练不同)
     private int maxEpochs;
@@ -79,7 +80,7 @@ public class GPT1Finetune {
         this.checkpointDir = "./checkpoints/gpt1_finetune";
         
         // 创建优化器
-        this.optimizer = new Adam(model, learningRate, 0.9f, 0.999f, 1e-8f);
+        this.optimizer = new SGD(model, learningRate);
         
         // 初始化状态
         this.currentEpoch = 0;
@@ -230,8 +231,18 @@ public class GPT1Finetune {
         Variable inputVar = new Variable(inputIds);
         Variable logits = model.predict(inputVar);
         
-        Variable targetVar = new Variable(targetIds);
-        Variable loss = lossFunction.loss(targetVar, logits);
+        // logits: [batch, seq_len, vocab_size] -> [batch * seq_len, vocab_size]
+        // targets: [batch, seq_len] -> [batch * seq_len]
+        int[] logitsShape = logits.getValue().getShape().getShapeDims();
+        int batchSize = logitsShape[0];
+        int seqLen = logitsShape[1];
+        int vocabSize = logitsShape[2];
+        
+        Variable logits2D = logits.reshape(Shape.of(batchSize * seqLen, vocabSize));
+        NdArray targets2D = targetIds.reshape(Shape.of(batchSize * seqLen, 1));
+        
+        Variable targetVar = new Variable(targets2D);
+        Variable loss = lossFunction.loss(targetVar, logits2D);
         
         float lossValue = loss.getValue().getNumber().floatValue();
         
@@ -267,8 +278,17 @@ public class GPT1Finetune {
             Variable inputVar = new Variable(inputIds);
             Variable logits = model.predict(inputVar);
             
-            Variable targetVar = new Variable(targetIds);
-            Variable loss = lossFunction.loss(targetVar, logits);
+            // logits: [batch, seq_len, vocab_size] -> [batch * seq_len, vocab_size]
+            int[] logitsShape = logits.getValue().getShape().getShapeDims();
+            int batchSize = logitsShape[0];
+            int seqLen = logitsShape[1];
+            int vocabSize = logitsShape[2];
+            
+            Variable logits2D = logits.reshape(Shape.of(batchSize * seqLen, vocabSize));
+            NdArray targets2D = targetIds.reshape(Shape.of(batchSize * seqLen, 1));
+            
+            Variable targetVar = new Variable(targets2D);
+            Variable loss = lossFunction.loss(targetVar, logits2D);
             
             totalLoss += loss.getValue().getNumber().floatValue();
             batchCount++;
