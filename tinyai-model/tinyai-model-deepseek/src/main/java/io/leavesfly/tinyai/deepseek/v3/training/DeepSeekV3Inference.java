@@ -29,6 +29,9 @@ public class DeepSeekV3Inference {
     private final DeepSeekV3Model model;
     private final Random random;
     
+    /** PAD token ID，推理时需要排除 */
+    private static final int PAD_TOKEN_ID = 0;
+    
     /**
      * 构造函数
      */
@@ -118,10 +121,11 @@ public class DeepSeekV3Inference {
             int seqLen = currentSeq.length;
             int vocabSize = logits.getShape().getDimension(2);
             
-            // 应用temperature
+            // 应用temperature，跳过PAD token (id=0)
             float[] probs = new float[vocabSize];
+            probs[0] = 0.0f;  // PAD token概率设为0
             float sum = 0.0f;
-            for (int j = 0; j < vocabSize; j++) {
+            for (int j = 1; j < vocabSize; j++) {
                 float logit = logits.get(0, seqLen - 1, j);
                 probs[j] = (float) Math.exp(logit / temperature);
                 sum += probs[j];
@@ -176,9 +180,10 @@ public class DeepSeekV3Inference {
             int seqLen = currentSeq.length;
             int vocabSize = logits.getShape().getDimension(2);
             
-            // 获取logits
+            // 获取logits，PAD token (id=0)设为负无穷大
             float[] logitArray = new float[vocabSize];
-            for (int j = 0; j < vocabSize; j++) {
+            logitArray[0] = Float.NEGATIVE_INFINITY;  // 排除PAD token
+            for (int j = 1; j < vocabSize; j++) {
                 logitArray[j] = logits.get(0, seqLen - 1, j);
             }
             
@@ -241,10 +246,11 @@ public class DeepSeekV3Inference {
             int seqLen = currentSeq.length;
             int vocabSize = logits.getShape().getDimension(2);
             
-            // 获取并排序概率
+            // 获取并排序概率，跳过PAD token (id=0)
             float[] probs = new float[vocabSize];
+            probs[0] = 0.0f;  // PAD token概率设为0
             float sum = 0.0f;
-            for (int j = 0; j < vocabSize; j++) {
+            for (int j = 1; j < vocabSize; j++) {
                 float logit = logits.get(0, seqLen - 1, j);
                 probs[j] = (float) Math.exp(logit);
                 sum += probs[j];
@@ -300,8 +306,9 @@ public class DeepSeekV3Inference {
     
     private int argmax(NdArray array, int b, int t) {
         int vocabSize = array.getShape().getDimension(2);
-        int maxIdx = 0;
-        float maxVal = array.get(b, t, 0);
+        int maxIdx = -1;
+        float maxVal = Float.NEGATIVE_INFINITY;
+        // 跳过PAD token (id=0)，从1开始
         for (int i = 1; i < vocabSize; i++) {
             float val = array.get(b, t, i);
             if (val > maxVal) {
@@ -309,7 +316,8 @@ public class DeepSeekV3Inference {
                 maxIdx = i;
             }
         }
-        return maxIdx;
+        // 如果没找到有效token，返回1（避免返回0/PAD）
+        return maxIdx > 0 ? maxIdx : 1;
     }
     
     private int[] getTopKIndices(float[] values, int k) {

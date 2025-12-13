@@ -33,6 +33,7 @@ build/
 .vscode/
 .qoder/
 .cursor/
+checkpoints/
 
 ### Mac OS ###
 .DS_Store

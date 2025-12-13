@@ -58,7 +58,7 @@ public class Qwen3TrainDemo {
                 config.getVocabSize(),
                 100,  // 100个样本
                 config.getMaxPositionEmbeddings(),
-                4     // batch_size=4
+                2     // batch_size=2, 减小内存占用
             );
             
             // 创建预训练器
@@ -73,6 +73,7 @@ public class Qwen3TrainDemo {
             );
             
             pretrain.setCheckpoint("./checkpoints/qwen3_pretrain_demo", 500);
+            pretrain.setLogInterval(5);  // 每5步输出一次日志，便于观察训练进度
             
             // 开始预训练
             System.out.println("\n开始预训练...");
@@ -107,10 +108,10 @@ public class Qwen3TrainDemo {
             
             // 创建训练和验证数据集
             Qwen3Dataset trainDataset = Qwen3Dataset.createDemoDataset(
-                config.getVocabSize(), 80, config.getMaxPositionEmbeddings(), 4
+                config.getVocabSize(), 80, config.getMaxPositionEmbeddings(), 2
             );
             Qwen3Dataset valDataset = Qwen3Dataset.createDemoDataset(
-                config.getVocabSize(), 20, config.getMaxPositionEmbeddings(), 4
+                config.getVocabSize(), 20, config.getMaxPositionEmbeddings(), 2
             );
             
             // 创建后训练器

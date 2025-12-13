@@ -10,6 +10,7 @@ import io.leavesfly.tinyai.nnet.v1.ParameterV1; // V1 ParameterV1 (for backward 
 import io.leavesfly.tinyai.nnet.V2ParameterProxy; // V2 Parameter 的代理类
 import io.leavesfly.tinyai.nnet.v2.adapter.BlockModuleAdapter;
 import io.leavesfly.tinyai.nnet.v2.core.Module;
+import io.leavesfly.tinyai.nnet.v2.core.Parameter;
 
 import java.io.*;
 import java.util.Map;
@@ -97,9 +98,9 @@ public class Model implements Serializable {
             modelInfo.setOutputShape(outputShape);
 
             // 统计参数数量（使用 V2 接口）
-            Map<String, io.leavesfly.tinyai.nnet.v2.core.Parameter> params = module.namedParameters();
+            Map<String,Parameter> params = module.namedParameters();
             long totalParams = 0;
-            for (io.leavesfly.tinyai.nnet.v2.core.Parameter param : params.values()) {
+            for (Parameter param : params.values()) {
                 if (param != null && param.data() != null) {
                     totalParams += param.data().getShape().size();
                 }
@@ -337,7 +338,7 @@ public class Model implements Serializable {
      *
      * @return 参数映射（V2 ParameterV1 格式）
      */
-    public Map<String, io.leavesfly.tinyai.nnet.v2.core.Parameter> getAllParamsV2() {
+    public Map<String, Parameter> getAllParamsV2() {
         return module.namedParameters();
     }
 

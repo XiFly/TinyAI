@@ -79,17 +79,18 @@ public class Qwen3Config {
     
     /**
      * 创建小型Qwen3配置（用于快速测试）
-     * 配置：512维, 4层, 8头, 序列长度1024, 约16M参数
+     * 配置：256维, 2层, 4头, 序列长度128, 约2.6M参数
+     * 设计用于轻量级测试，降低内存占用
      */
     public static Qwen3Config createSmallConfig() {
         Qwen3Config config = new Qwen3Config();
-        config.setVocabSize(10000);
-        config.setHiddenSize(512);
-        config.setIntermediateSize(1408);  // 512 * 2.75
-        config.setNumHiddenLayers(4);
-        config.setNumAttentionHeads(8);
-        config.setNumKeyValueHeads(8);
-        config.setMaxPositionEmbeddings(1024);
+        config.setVocabSize(5000);     // 减小词表
+        config.setHiddenSize(256);     // 减小隐藏维度
+        config.setIntermediateSize(704);  // 256 * 2.75
+        config.setNumHiddenLayers(2);  // 减少层数
+        config.setNumAttentionHeads(4);
+        config.setNumKeyValueHeads(4);
+        config.setMaxPositionEmbeddings(128);  // 减小序列长度
         return config;
     }
     

@@ -25,8 +25,8 @@ public class ParallelTrainingUtils {
      * 每个线程需要独立的模型实例来避免参数冲突
      * <p>
      * 优化策略：
-     * 1. 优先使用基于参数复制的方式（更快）
-     * 2. 如果失败，回退到序列化方式
+     * 1. 优先使用序列化方式（保证类型正确）
+     * 2. 如果失败，回退到参数复制方式（仅适用于基础Model类）
      *
      * @param originalModel 原始模型
      * @return 深拷贝的模型实例
@@ -38,12 +38,13 @@ public class ParallelTrainingUtils {
         }
         
         try {
-            // 方案1：基于参数复制（更快，避免序列化开销）
-            return deepCopyModelByParameters(originalModel);
+            // 方案1：优先使用序列化方式（保证类型正确）
+            return deepCopyModelBySerialization(originalModel);
         } catch (Exception e) {
-            // 方案2：回退到序列化方式（兼容性更好）
+            System.err.println("⚠️ 序列化深拷贝失败: " + e.getMessage());
+            // 方案2：回退到参数复制方式（仅适用于基础Model类）
             try {
-                return deepCopyModelBySerialization(originalModel);
+                return deepCopyModelByParameters(originalModel);
             } catch (Exception e2) {
                 throw new TrainingException("模型深拷贝失败: " + e2.getMessage(), e2);
             }

@@ -94,15 +94,18 @@ public class DeepSeekR1TrainDemo {
         System.out.println("示例2: DeepSeek-R1后训练/微调");
         System.out.println("=".repeat(80));
         
-        // 创建模型
+        // 创建微型模型用于演示，降低内存占用
         DeepSeekR1Config config = DeepSeekR1Config.createTinyConfig();
+        // 减少推理步数以降低计算图深度
+        config.setMaxReasoningSteps(2);
+        config.setNLayer(2);  // 减少Transformer层数
         DeepSeekR1Model model = new DeepSeekR1Model("DeepSeek-R1-Tiny", config);
         
-        // 创建训练和验证数据集
+        // 创建训练和验证数据集，减小序列长度和批次大小以降低内存占用
         int numTrainSamples = 80;
         int numValSamples = 20;
-        int seqLength = 32;
-        int batchSize = 4;
+        int seqLength = 16;
+        int batchSize = 2;
         
         DeepSeekR1Dataset trainDataset = DeepSeekR1Dataset.createDummyDataset(
             numTrainSamples, seqLength, config.getVocabSize(), batchSize
@@ -138,14 +141,17 @@ public class DeepSeekR1TrainDemo {
         System.out.println("示例3: DeepSeek-R1强化学习训练(RLHF)");
         System.out.println("=".repeat(80));
         
-        // 创建模型
+        // 创建微型模型用于演示，降低内存占用
         DeepSeekR1Config config = DeepSeekR1Config.createTinyConfig();
+        // 减少推理步数以降低计算图深度
+        config.setMaxReasoningSteps(2);
+        config.setNLayer(2);  // 减少Transformer层数
         DeepSeekR1Model model = new DeepSeekR1Model("DeepSeek-R1-Tiny", config);
         
-        // 创建RLHF数据集(包含人类反馈)
+        // 创建RLHF数据集(包含人类反馈)，减小序列长度和批次大小
         int numSamples = 50;
-        int seqLength = 32;
-        int batchSize = 4;
+        int seqLength = 16;
+        int batchSize = 2;
         
         DeepSeekR1Dataset rlhfDataset = DeepSeekR1Dataset.createDummyRLHFDataset(
             numSamples, seqLength, config.getVocabSize(), batchSize

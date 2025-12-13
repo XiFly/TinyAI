@@ -1,0 +1,20 @@
+Instruction: What is deep learning? Response: Deep learning is a subset of machine learning that uses neural networks with multiple layers to learn hierarchical representations from data
+Instruction: Explain backpropagation. Response: Backpropagation is an algorithm that computes gradients of the loss function with respect to network parameters by applying the chain rule backwards through the computational graph
+Instruction: What is overfitting? Response: Overfitting occurs when a model learns the training data too well including noise and fails to generalize to new unseen data
+Instruction: How does dropout work? Response: Dropout randomly sets a fraction of activations to zero during training which prevents co adaptation of neurons and improves generalization
+Instruction: What is transfer learning? Response: Transfer learning reuses knowledge from a pretrained model on one task to improve performance on a related task with limited data
+Instruction: Explain convolutional neural networks. Response: Convolutional neural networks use convolutional layers to extract spatial features from images through learned filters
+Instruction: What are recurrent neural networks? Response: Recurrent neural networks process sequential data by maintaining hidden states that capture information from previous time steps
+Instruction: How does batch normalization work? Response: Batch normalization normalizes layer inputs across mini batches to reduce internal covariate shift and accelerate training
+Instruction: What is gradient descent? Response: Gradient descent is an optimization algorithm that iteratively updates parameters in the direction that reduces the loss function
+Instruction: Explain activation functions. Response: Activation functions introduce non linearity into neural networks enabling them to learn complex patterns beyond linear relationships
+Instruction: What is natural language processing? Response: Natural language processing is a field of AI that enables computers to understand analyze and generate human language
+Instruction: Explain word embeddings. Response: Word embeddings are dense vector representations of words that capture semantic relationships in a continuous space
+Instruction: What is tokenization? Response: Tokenization is the process of splitting text into smaller units like words subwords or characters for processing by language models
+Instruction: How do language models work? Response: Language models learn probability distributions over sequences of words and can predict the next word given previous context
+Instruction: What is sentiment analysis? Response: Sentiment analysis determines the emotional tone or opinion expressed in text such as positive negative or neutral
+Instruction: Explain named entity recognition. Response: Named entity recognition identifies and classifies entities like persons organizations and locations in text
+Instruction: What is machine translation? Response: Machine translation automatically converts text from one natural language to another using statistical or neural methods
+Instruction: How does text classification work? Response: Text classification assigns documents to predefined categories based on learned patterns in the text
+Instruction: What is question answering? Response: Question answering systems take natural language questions as input and provide accurate answers from knowledge sources
+Instruction: Explain sequence to sequence models. Response: Sequence to sequence models map input sequences to output sequences and are used for tasks like translation and summarization

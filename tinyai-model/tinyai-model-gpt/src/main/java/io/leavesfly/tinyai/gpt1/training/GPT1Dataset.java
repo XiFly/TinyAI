@@ -269,11 +269,13 @@ public class GPT1Dataset {
         private final Map<String, Integer> word2idx;
         private final Map<Integer, String> idx2word;
         private int nextId;
+        private boolean frozen;  // 词汇表是否冻结
         
         public SimpleTokenizer() {
             this.word2idx = new HashMap<>();
             this.idx2word = new HashMap<>();
             this.nextId = 0;
+            this.frozen = false;
             
             // 添加特殊token
             addToken("<PAD>");
@@ -291,6 +293,20 @@ public class GPT1Dataset {
         }
         
         /**
+         * 冻结词汇表,不再添加新词
+         */
+        public void freeze() {
+            this.frozen = true;
+        }
+        
+        /**
+         * 解冻词汇表,允许添加新词
+         */
+        public void unfreeze() {
+            this.frozen = false;
+        }
+        
+        /**
          * 编码文本
          */
         public List<Integer> encode(String text) {
@@ -302,8 +318,15 @@ public class GPT1Dataset {
             for (String word : words) {
                 if (word.isEmpty()) continue;
                 
+                // 如果词汇表未冻结且词不存在,则添加新词
                 if (!word2idx.containsKey(word)) {
-                    addToken(word);
+                    if (!frozen) {
+                        addToken(word);
+                    } else {
+                        // 词汇表已冻结,使用<UNK>
+                        ids.add(word2idx.get("<UNK>"));
+                        continue;
+                    }
                 }
                 ids.add(word2idx.get(word));
             }

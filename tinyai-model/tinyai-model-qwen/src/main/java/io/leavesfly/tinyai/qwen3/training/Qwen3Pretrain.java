@@ -4,6 +4,7 @@ import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ml.loss.SoftmaxCrossEntropy;
 import io.leavesfly.tinyai.ml.optimize.Adam;
 import io.leavesfly.tinyai.ndarr.NdArray;
+import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.v2.core.Parameter;
 import io.leavesfly.tinyai.qwen3.Qwen3Config;
 import io.leavesfly.tinyai.qwen3.Qwen3Model;
@@ -98,6 +99,14 @@ public class Qwen3Pretrain {
     }
     
     /**
+     * 设置日志输出间隔
+     */
+    public Qwen3Pretrain setLogInterval(int logInterval) {
+        this.logInterval = logInterval;
+        return this;
+    }
+    
+    /**
      * 开始训练
      */
     public void train() {
@@ -138,14 +147,19 @@ public class Qwen3Pretrain {
      * 训练一个epoch
      */
     private void trainOneEpoch() {
+        System.out.println("\n[DEBUG] 开始 Epoch " + (currentEpoch + 1) + "/" + maxEpochs);
+        System.out.println("[DEBUG] 准备数据集...");
         dataset.prepare(true);
+        System.out.println("[DEBUG] 数据集准备完成, 批次数: " + dataset.getBatchCount());
         
         double epochLoss = 0.0;
         int batchCount = 0;
         
         long epochStartTime = System.currentTimeMillis();
         
+        System.out.println("[DEBUG] 开始遍历批次...\n");
         while (dataset.hasNext()) {
+            System.out.println("[DEBUG] 获取第 " + (batchCount + 1) + " 个批次");
             Qwen3Dataset.Batch batch = dataset.nextBatch();
             
             // 训练一步
@@ -183,39 +197,69 @@ public class Qwen3Pretrain {
      * 训练单步
      */
     private float trainStep(Qwen3Dataset.Batch batch) {
+        System.out.println("[DEBUG] 训练步骤 " + (globalStep + 1) + " 开始");
+        
         // 更新学习率
+        System.out.println("[DEBUG] 更新学习率...");
         updateLearningRate();
         
         // 准备输入
+        System.out.println("[DEBUG] 准备输入数据...");
         NdArray inputIds = batch.getInputIds();
         NdArray targetIds = batch.getTargetIds();
+        System.out.println("[DEBUG] 输入shape: " + java.util.Arrays.toString(inputIds.getShape().getShapeDims()));
         
         Variable inputVar = new Variable(inputIds);
         
         // 前向传播
+        System.out.println("[DEBUG] 开始前向传播...");
         Variable logits = model.forward(inputVar);
+        System.out.println("[DEBUG] 前向传播完成, logits shape: " + java.util.Arrays.toString(logits.getShape().getShapeDims()));
         
-        // 计算损失
+        // 计算损失 - 需要将3D张量reshape为2D
+        // logits shape: (batch_size, seq_len, vocab_size)
+        // targets shape: (batch_size, seq_len, 1)
+        System.out.println("[DEBUG] 准备计算损失...");
+        int[] logitsShape = logits.getShape().getShapeDims();
+        int batchSize = logitsShape[0];
+        int seqLen = logitsShape[1];
+        int vocabSize = logitsShape[2];
+        
+        // Reshape为2D: (batch_size * seq_len, vocab_size) 和 (batch_size * seq_len, 1)
+        System.out.println("[DEBUG] Reshape logits和targets为2D...");
+        Variable logits2D = logits.reshape(Shape.of(batchSize * seqLen, vocabSize));
+        
         Variable targetVar = new Variable(targetIds);
-        Variable loss = lossFunction.loss(targetVar, logits);
+        Variable targets2D = targetVar.reshape(Shape.of(batchSize * seqLen, 1));
+        
+        System.out.println("[DEBUG] 计算损失函数...");
+        Variable loss = lossFunction.loss(targets2D, logits2D);
         
         float lossValue = loss.getValue().getNumber().floatValue();
+        System.out.println("[DEBUG] 损失值: " + lossValue);
         
         // 清空梯度
+        System.out.println("[DEBUG] 清空梯度...");
         model.clearGrads();
         
         // 反向传播
+        System.out.println("[DEBUG] 开始反向传播...");
         loss.backward();
+        System.out.println("[DEBUG] 反向传播完成");
         
         // 梯度裁剪
+        System.out.println("[DEBUG] 梯度裁剪...");
         clipGradients();
         
         // 参数更新
+        System.out.println("[DEBUG] 参数更新...");
         optimizer.update();
         
         // 断开计算图
+        System.out.println("[DEBUG] 断开计算图...");
         loss.unChainBackward();
         
+        System.out.println("[DEBUG] 训练步骤 " + (globalStep + 1) + " 完成\n");
         return lossValue;
     }
     

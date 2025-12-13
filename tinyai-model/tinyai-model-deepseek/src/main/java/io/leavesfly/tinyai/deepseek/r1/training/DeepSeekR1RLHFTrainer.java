@@ -3,7 +3,7 @@ package io.leavesfly.tinyai.deepseek.r1.training;
 import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Model;
 import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1ReflectionBlock;
 import io.leavesfly.tinyai.func.Variable;
-import io.leavesfly.tinyai.ml.optimize.Adam;
+import io.leavesfly.tinyai.ml.optimize.SGD;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.nnet.v2.core.Parameter;
 
@@ -26,7 +26,7 @@ public class DeepSeekR1RLHFTrainer {
     
     private final DeepSeekR1Model model;
     private final DeepSeekR1Dataset dataset;
-    private final Adam optimizer;
+    private final SGD optimizer;
     
     private int maxEpochs;
     private float learningRate;
@@ -54,7 +54,8 @@ public class DeepSeekR1RLHFTrainer {
         this.logInterval = 20;
         this.checkpointDir = "./checkpoints/deepseek_r1_rlhf";
         
-        this.optimizer = new Adam(model, learningRate, 0.9f, 0.999f, 1e-8f);
+        // 使用SGD替代Adam，减少临时NdArray对象创建，降低内存占用
+        this.optimizer = new SGD(model, learningRate);
         
         this.currentEpoch = 0;
         this.globalStep = 0;

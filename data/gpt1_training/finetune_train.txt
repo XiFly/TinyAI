@@ -1,0 +1,70 @@
+Instruction: What is deep learning? Response: Deep learning is a subset of machine learning that uses neural networks with multiple layers to learn hierarchical representations from data
+Instruction: Explain backpropagation. Response: Backpropagation is an algorithm that computes gradients of the loss function with respect to network parameters by applying the chain rule backwards through the computational graph
+Instruction: What is overfitting? Response: Overfitting occurs when a model learns the training data too well including noise and fails to generalize to new unseen data
+Instruction: How does dropout work? Response: Dropout randomly sets a fraction of activations to zero during training which prevents co adaptation of neurons and improves generalization
+Instruction: What is transfer learning? Response: Transfer learning reuses knowledge from a pretrained model on one task to improve performance on a related task with limited data
+Instruction: Explain convolutional neural networks. Response: Convolutional neural networks use convolutional layers to extract spatial features from images through learned filters
+Instruction: What are recurrent neural networks? Response: Recurrent neural networks process sequential data by maintaining hidden states that capture information from previous time steps
+Instruction: How does batch normalization work? Response: Batch normalization normalizes layer inputs across mini batches to reduce internal covariate shift and accelerate training
+Instruction: What is gradient descent? Response: Gradient descent is an optimization algorithm that iteratively updates parameters in the direction that reduces the loss function
+Instruction: Explain activation functions. Response: Activation functions introduce non linearity into neural networks enabling them to learn complex patterns beyond linear relationships
+Instruction: What is natural language processing? Response: Natural language processing is a field of AI that enables computers to understand analyze and generate human language
+Instruction: Explain word embeddings. Response: Word embeddings are dense vector representations of words that capture semantic relationships in a continuous space
+Instruction: What is tokenization? Response: Tokenization is the process of splitting text into smaller units like words subwords or characters for processing by language models
+Instruction: How do language models work? Response: Language models learn probability distributions over sequences of words and can predict the next word given previous context
+Instruction: What is sentiment analysis? Response: Sentiment analysis determines the emotional tone or opinion expressed in text such as positive negative or neutral
+Instruction: Explain named entity recognition. Response: Named entity recognition identifies and classifies entities like persons organizations and locations in text
+Instruction: What is machine translation? Response: Machine translation automatically converts text from one natural language to another using statistical or neural methods
+Instruction: How does text classification work? Response: Text classification assigns documents to predefined categories based on learned patterns in the text
+Instruction: What is question answering? Response: Question answering systems take natural language questions as input and provide accurate answers from knowledge sources
+Instruction: Explain sequence to sequence models. Response: Sequence to sequence models map input sequences to output sequences and are used for tasks like translation and summarization
+Instruction: What is the transformer architecture? Response: The transformer is a neural network architecture that uses self attention mechanisms to process sequences in parallel without recurrence
+Instruction: Explain self attention. Response: Self attention computes weighted relationships between all positions in a sequence allowing the model to focus on relevant parts of the input
+Instruction: What is GPT? Response: GPT is a generative pretrained transformer that uses decoder only architecture for autoregressive language modeling and text generation
+Instruction: How does multi head attention work? Response: Multi head attention runs multiple attention mechanisms in parallel each learning different aspects of relationships between tokens
+Instruction: What is positional encoding? Response: Positional encoding adds information about token positions to embeddings since transformers have no built in notion of sequence order
+Instruction: Explain masked language modeling. Response: Masked language modeling trains models to predict masked tokens in a sequence using bidirectional context
+Instruction: What is causal language modeling? Response: Causal language modeling predicts the next token in a sequence using only previous tokens in autoregressive fashion
+Instruction: How does BERT work? Response: BERT uses bidirectional transformers and masked language modeling to learn contextualized representations for language understanding
+Instruction: What is fine tuning? Response: Fine tuning adapts a pretrained model to a specific downstream task by training on task specific data with a smaller learning rate
+Instruction: Explain encoder decoder architecture. Response: Encoder decoder architecture processes input sequences with an encoder and generates output sequences with a decoder connected by attention
+Instruction: What is TinyAI? Response: TinyAI is a Java based deep learning framework designed for education that implements core concepts like autograd neural networks and transformers
+Instruction: Explain NdArray in TinyAI. Response: NdArray is the fundamental multidimensional array class in TinyAI that stores numerical data and supports operations like matrix multiplication
+Instruction: What is Variable in TinyAI? Response: Variable wraps NdArray and tracks computational graphs enabling automatic differentiation for backpropagation
+Instruction: How does autograd work in TinyAI? Response: The autograd engine builds a computational graph during forward pass and automatically computes gradients during backward pass using the chain rule
+Instruction: What is Module in TinyAI? Response: Module is the base class for neural network layers that defines forward computation and manages learnable parameters
+Instruction: Explain Parameter in TinyAI. Response: Parameter represents learnable weights in neural networks that are updated during training through gradient descent
+Instruction: How does forward pass work? Response: The forward pass computes outputs by propagating inputs through network layers while building the computational graph
+Instruction: What is backward pass? Response: The backward pass computes gradients by traversing the computational graph in reverse and applying the chain rule
+Instruction: Explain SGD optimizer. Response: SGD optimizer updates model parameters by subtracting the gradient scaled by the learning rate
+Instruction: What is Linear layer? Response: Linear layer performs affine transformation by multiplying input with a weight matrix and adding a bias vector
+Instruction: What is supervised learning? Response: Supervised learning trains models on labeled data where each input has a corresponding target output
+Instruction: Explain gradient descent. Response: Gradient descent is an optimization algorithm that iteratively updates parameters in the direction that reduces the loss function
+Instruction: What is regularization? Response: Regularization adds constraints to model training to prevent overfitting and improve generalization to new data
+Instruction: How does cross validation work? Response: Cross validation splits data into multiple folds and evaluates model performance on each fold to estimate generalization ability
+Instruction: What is the learning rate? Response: Learning rate controls the step size during gradient descent optimization affecting training speed and convergence
+Instruction: Explain ensemble methods. Response: Ensemble methods combine predictions from multiple models to achieve better performance than any single model
+Instruction: What is feature engineering? Response: Feature engineering transforms raw data into meaningful representations that improve model learning and performance
+Instruction: How does early stopping work? Response: Early stopping monitors validation performance during training and stops when performance stops improving to prevent overfitting
+Instruction: What is the bias variance tradeoff? Response: The bias variance tradeoff balances model simplicity and flexibility to achieve optimal generalization performance
+Instruction: Explain data augmentation. Response: Data augmentation creates variations of training examples through transformations to increase dataset diversity
+Instruction: What is a neural network? Response: A neural network is a computing system with interconnected layers of neurons that learn to map inputs to outputs
+Instruction: Explain activation functions. Response: Activation functions introduce non linearity into neural networks enabling them to learn complex patterns beyond linear relationships
+Instruction: What is ReLU? Response: ReLU or rectified linear unit is an activation function that outputs the input if positive and zero otherwise
+Instruction: How does batch normalization work? Response: Batch normalization normalizes layer inputs across mini batches to reduce internal covariate shift and accelerate training
+Instruction: What is the softmax function? Response: Softmax converts a vector of values into a probability distribution where all outputs sum to one
+Instruction: Explain loss functions. Response: Loss functions measure the difference between model predictions and true labels guiding parameter updates during training
+Instruction: What is cross entropy loss? Response: Cross entropy loss measures the difference between predicted and true probability distributions for classification
+Instruction: How does Adam optimizer work? Response: Adam optimizer adapts learning rates for each parameter using estimates of first and second moments of gradients
+Instruction: What are residual connections? Response: Residual connections add skip connections that help train very deep networks by avoiding vanishing gradient problems
+Instruction: Explain weight initialization. Response: Weight initialization sets initial parameter values to break symmetry and enable effective gradient based learning
+Instruction: What is image classification? Response: Image classification assigns images to predefined categories based on visual content using convolutional neural networks
+Instruction: Explain object detection. Response: Object detection locates and classifies multiple objects within images by predicting bounding boxes and class labels
+Instruction: What is speech recognition? Response: Speech recognition converts spoken audio into text using acoustic and language models
+Instruction: How does text generation work? Response: Text generation creates coherent text by predicting one token at a time conditioned on previous tokens
+Instruction: What is semantic segmentation? Response: Semantic segmentation assigns a class label to every pixel in an image for fine grained understanding
+Instruction: Explain recommendation systems. Response: Recommendation systems predict user preferences and suggest relevant items based on historical behavior
+Instruction: What is anomaly detection? Response: Anomaly detection identifies unusual patterns or outliers that deviate from normal behavior
+Instruction: How does style transfer work? Response: Style transfer applies artistic style from one image to the content of another using neural networks
+Instruction: What is facial recognition? Response: Facial recognition identifies or verifies individuals by comparing facial features extracted by deep networks
+Instruction: Explain time series forecasting. Response: Time series forecasting predicts future values based on historical temporal patterns using recurrent networks

@@ -4,7 +4,7 @@ import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Config;
 import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Model;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ml.loss.SoftmaxCrossEntropy;
-import io.leavesfly.tinyai.ml.optimize.Adam;
+import io.leavesfly.tinyai.ml.optimize.SGD;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 import io.leavesfly.tinyai.nnet.v2.core.Parameter;
@@ -33,7 +33,7 @@ public class DeepSeekR1Posttrain {
     private final DeepSeekR1Dataset trainDataset;
     private final DeepSeekR1Dataset valDataset;
     private final SoftmaxCrossEntropy lossFunction;
-    private final Adam optimizer;
+    private final SGD optimizer;
     
     // 后训练超参数
     private int maxEpochs;
@@ -71,7 +71,8 @@ public class DeepSeekR1Posttrain {
         this.patience = 3;
         this.checkpointDir = "./checkpoints/deepseek_r1_posttrain";
         
-        this.optimizer = new Adam(model, learningRate, 0.9f, 0.999f, 1e-8f);
+        // 使用SGD替代Adam，减少临时NdArray对象创建，降低内存占用
+        this.optimizer = new SGD(model, learningRate);
         
         this.currentEpoch = 0;
         this.globalStep = 0;

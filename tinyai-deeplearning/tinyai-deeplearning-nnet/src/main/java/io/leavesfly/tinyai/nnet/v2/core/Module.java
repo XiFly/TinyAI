@@ -4,6 +4,7 @@ import io.leavesfly.tinyai.func.Function;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -20,7 +21,9 @@ import java.util.function.Consumer;
  * @author leavesfly
  * @version 2.0
  */
-public abstract class Module extends Function {
+public abstract class Module extends Function implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /**
      * 模块名称
@@ -47,8 +50,9 @@ public abstract class Module extends Function {
 
     /**
      * 父模块引用
+     * 使用 transient 避免序列化时的循环引用问题
      */
-    protected Module _parent;
+    protected transient Module _parent;
 
     /**
      * 是否处于训练模式
