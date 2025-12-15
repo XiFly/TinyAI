@@ -526,15 +526,15 @@ public class GPT1TrainDemoV2 {
         System.out.println("\n📝 配置预训练器...");
         GPT1Pretrain trainer = new GPT1Pretrain(model, dataset);
         trainer.configure(
+            15,
+            1e-2f,
             5,
-            1e-3f,
-            50,
             1.0f
         ).setCheckpoint(CHECKPOINT_DIR + "/pretrain", 100);
 
-        System.out.println("  ✓ 最大轮次: 5");
-        System.out.println("  ✓ 学习率: 1e-3");
-        System.out.println("  ✓ Warmup步数: 50");
+        System.out.println("  ✓ 最大轮次: 15");
+        System.out.println("  ✓ 学习率: 1e-2");
+        System.out.println("  ✓ Warmup步数: 5");
         System.out.println("  ✓ 梯度裁剪: 1.0");
 
         // 6. 开始训练
@@ -602,14 +602,14 @@ public class GPT1TrainDemoV2 {
         );
         
         finetuner.configure(
-            3,
-            5e-4f,
-            2
+            10,
+            1e-3f,
+            3
         ).setCheckpoint(CHECKPOINT_DIR + "/finetune", 50);
 
-        System.out.println("  ✓ 最大轮次: 3");
-        System.out.println("  ✓ 学习率: 5e-4 (比预训练小)");
-        System.out.println("  ✓ 早停耐心值: 2");
+        System.out.println("  ✓ 最大轮次: 10");
+        System.out.println("  ✓ 学习率: 1e-3 (比预训练小)");
+        System.out.println("  ✓ 早停耐心值: 3");
 
         // 4. 开始微调
         System.out.println("\n📝 开始微调...");

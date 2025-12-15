@@ -103,6 +103,8 @@ public class GPT1Finetune {
         this.maxEpochs = maxEpochs;
         this.learningRate = learningRate;
         this.patience = patience;
+        // 更新优化器学习率
+        this.optimizer.setLearningRate(learningRate);
         return this;
     }
     

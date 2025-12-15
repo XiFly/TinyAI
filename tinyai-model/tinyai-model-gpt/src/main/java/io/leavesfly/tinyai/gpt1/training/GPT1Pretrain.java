@@ -100,6 +100,8 @@ public class GPT1Pretrain {
         this.initialLearningRate = learningRate;
         this.warmupSteps = warmupSteps;
         this.maxGradNorm = maxGradNorm;
+        // 更新优化器学习率
+        this.optimizer.setLearningRate(learningRate);
         return this;
     }
     
@@ -268,8 +270,8 @@ public class GPT1Pretrain {
             currentLearningRate = Math.max(decayedLR, minLearningRate);
         }
         
-        // 更新优化器学习率(需要通过反射或提供setter)
-        // optimizer.setLearningRate(currentLearningRate);
+        // 更新优化器学习率
+        optimizer.setLearningRate(currentLearningRate);
     }
     
     /**
