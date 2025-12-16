@@ -79,7 +79,7 @@ public class ValueNetwork extends Module {
     public Variable forward(Variable hidden) {
         // Layer 1 + Tanh激活
         Variable h1 = linear1.forward(hidden);
-        Variable activated = tanh(h1);
+        Variable activated = h1.tanh();  // 使用 Variable.tanh() 算子
         
         // Layer 2
         Variable value = linear2.forward(activated);
@@ -127,25 +127,7 @@ public class ValueNetwork extends Module {
         return value.getValue().getNumber().floatValue();
     }
     
-    /**
-     * Tanh激活函数
-     */
-    private Variable tanh(Variable x) {
-        NdArray data = x.getValue();
-        float[] buffer = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) data).buffer;
-        float[] result = new float[buffer.length];
-        
-        for (int i = 0; i < buffer.length; i++) {
-            result[i] = (float) Math.tanh(buffer[i]);
-        }
-        
-        NdArray resultArray = NdArray.of(Shape.of(data.getShape().getShapeDims()));
-        float[] resultBuffer = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) resultArray).buffer;
-        System.arraycopy(result, 0, resultBuffer, 0, result.length);
-        Variable out = new Variable(resultArray);
-        
-        return out;
-    }
+    // 已删除 tanh 方法，改用 Variable.tanh() 算子
     
     /**
      * Reshape操作(简化实现)

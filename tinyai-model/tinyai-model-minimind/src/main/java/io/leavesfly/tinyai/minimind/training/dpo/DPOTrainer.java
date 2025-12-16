@@ -3,6 +3,7 @@ package io.leavesfly.tinyai.minimind.training.dpo;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.minimind.model.MiniMindConfig;
 import io.leavesfly.tinyai.minimind.model.MiniMindModel;
+import io.leavesfly.tinyai.minimind.training.dataset.DPODataset;
 import io.leavesfly.tinyai.ml.optimize.Adam;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.nnet.v1.ParameterV1;

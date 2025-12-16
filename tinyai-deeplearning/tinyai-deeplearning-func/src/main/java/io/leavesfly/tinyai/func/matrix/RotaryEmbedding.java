@@ -291,6 +291,6 @@ public class RotaryEmbedding extends Function {
 
     @Override
     public int requireInputNum() {
-        return 1;  // 第二个参数 startPos 是可选的
+        return -1;  // 返回-1表示支持可变参数（1个或2个），第二个参数 startPos 是可选的
     }
 }

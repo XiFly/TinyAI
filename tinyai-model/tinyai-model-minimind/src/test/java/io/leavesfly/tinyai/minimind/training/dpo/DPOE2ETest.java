@@ -3,6 +3,7 @@ package io.leavesfly.tinyai.minimind.training.dpo;
 import io.leavesfly.tinyai.minimind.model.MiniMindConfig;
 import io.leavesfly.tinyai.minimind.model.MiniMindModel;
 import io.leavesfly.tinyai.minimind.tokenizer.MiniMindTokenizer;
+import io.leavesfly.tinyai.minimind.training.dataset.DPODataset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

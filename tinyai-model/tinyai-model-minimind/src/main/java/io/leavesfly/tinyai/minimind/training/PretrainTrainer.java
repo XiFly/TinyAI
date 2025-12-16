@@ -8,6 +8,7 @@ import io.leavesfly.tinyai.ml.loss.SoftmaxCrossEntropy;
 import io.leavesfly.tinyai.ml.optimize.Adam;
 import io.leavesfly.tinyai.ml.Model;
 import io.leavesfly.tinyai.ndarr.NdArray;
+import io.leavesfly.tinyai.ndarr.Shape;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -211,8 +212,16 @@ public class PretrainTrainer {
         // 前向传播
         Variable logits = model.predict(input);
         
+        // SoftmaxCE 需要 2D 输入，将 [batch, seqLen, vocabSize] reshape 为 [batch*seqLen, vocabSize]
+        int[] logitsShape = logits.getValue().getShape().getShapeDims();
+        int totalTokens = logitsShape[0] * logitsShape[1];
+        int vocabSize = logitsShape[2];
+        
+        Variable logitsReshaped = logits.reshape(Shape.of(totalTokens, vocabSize));
+        Variable targetReshaped = target.reshape(Shape.of(totalTokens, 1));
+        
         // 计算损失
-        Variable loss = lossFunction.loss(target, logits);
+        Variable loss = lossFunction.loss(targetReshaped, logitsReshaped);
         float lossValue = loss.getValue().getNumber().floatValue();
         
         // 清除梯度

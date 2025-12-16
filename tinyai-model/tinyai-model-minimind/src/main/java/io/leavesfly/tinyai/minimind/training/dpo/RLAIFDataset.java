@@ -1,4 +1,4 @@
-package io.leavesfly.tinyai.minimind.training.rlaif;
+package io.leavesfly.tinyai.minimind.training.dpo;
 
 import io.leavesfly.tinyai.minimind.tokenizer.MiniMindTokenizer;
 import io.leavesfly.tinyai.ndarr.NdArray;

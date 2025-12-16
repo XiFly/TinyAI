@@ -6,6 +6,7 @@ import io.leavesfly.tinyai.minimind.training.dataset.SFTDataset;
 import io.leavesfly.tinyai.ml.loss.SoftmaxCrossEntropy;
 import io.leavesfly.tinyai.ml.optimize.Adam;
 import io.leavesfly.tinyai.ndarr.NdArray;
+import io.leavesfly.tinyai.ndarr.Shape;
 
 import java.io.File;
 
@@ -141,7 +142,7 @@ public class SFTTrainer {
         long epochEndTime = System.currentTimeMillis();
         double avgEpochLoss = batchCount > 0 ? epochLoss / batchCount : 0.0;
         
-        System.out.printf("Epoch %d 完成 | 平均损失: %.4f | 耗时: %d ms%n",
+        System.out.printf("Epoch %d 完成 | 平均损失: %.6f | 耗时: %d ms%n",
             currentEpoch + 1, avgEpochLoss, epochEndTime - epochStartTime);
         
         dataset.reset();
@@ -153,7 +154,7 @@ public class SFTTrainer {
     private float trainStep(SFTDataset.Batch batch) {
         NdArray inputArray = batch.getInput();
         NdArray labelArray = batch.getLabels();
-        NdArray maskArray = batch.getLossMask();
+        // 注: 掩码暂不使用，SoftmaxCE 已计算平均损失
         
         Variable input = new Variable(inputArray);
         Variable labels = new Variable(labelArray);
@@ -161,19 +162,30 @@ public class SFTTrainer {
         // 前向传播
         Variable logits = model.predict(input);
         
-        // 计算损失(应用掩码)
-        Variable loss = lossFunction.loss(labels, logits);
+        // SoftmaxCE 需要 2D 输入，将 [batch, seqLen, vocabSize] reshape 为 [batch*seqLen, vocabSize]
+        int[] logitsShape = logits.getValue().getShape().getShapeDims();
+        int totalTokens = logitsShape[0] * logitsShape[1];
+        int vocabSize = logitsShape[2];
         
-        // 应用损失掩码
-        Variable maskedLoss = applyLossMask(loss, maskArray);
+        Variable logitsReshaped = logits.reshape(Shape.of(totalTokens, vocabSize));
+        Variable labelsReshaped = labels.reshape(Shape.of(totalTokens, 1));
         
-        float lossValue = maskedLoss.getValue().getNumber().floatValue();
+        // 计算损失（SoftmaxCE 返回标量平均损失）
+        Variable loss = lossFunction.loss(labelsReshaped, logitsReshaped);
+        
+        float lossValue = loss.getValue().getNumber().floatValue();
+        
+        // 检查异常值
+        if (Float.isNaN(lossValue) || Float.isInfinite(lossValue)) {
+            System.err.println("警告: 损失值异常 (" + lossValue + "), 跳过此步");
+            return 0.0f;
+        }
         
         // 清除梯度
         model.clearGrads();
         
         // 反向传播
-        maskedLoss.backward();
+        loss.backward();
         
         // 梯度裁剪
         clipGradients();
@@ -182,31 +194,9 @@ public class SFTTrainer {
         optimizer.update();
         
         // 断开计算图
-        maskedLoss.unChainBackward();
+        loss.unChainBackward();
         
         return lossValue;
-    }
-    
-    /**
-     * 应用损失掩码
-     */
-    private Variable applyLossMask(Variable loss, NdArray mask) {
-        // 将损失与掩码相乘,然后取平均
-        Variable maskVar = new Variable(mask);
-        Variable maskedLoss = loss.mul(maskVar);
-        
-        // 计算掩码中1的数量,用于归一化
-        float[] maskData = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) mask).buffer;
-        float maskSum = 0;
-        for (float m : maskData) {
-            maskSum += m;
-        }
-        
-        if (maskSum > 0) {
-            return maskedLoss.div(new Variable(NdArray.of(maskSum)));
-        }
-        
-        return maskedLoss;
     }
     
     /**

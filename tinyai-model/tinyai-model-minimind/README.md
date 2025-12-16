@@ -12,7 +12,7 @@
 
 - **🎓 教育友好**: 清晰的架构设计,完整的文档,适合学习 Transformer 和 LLM 原理
 - **💡 资源高效**: 26M 参数可在普通 CPU 上训练和推理,无需昂贵的 GPU
-- **🔧 功能完整**: 支持预训练、SFT、LoRA、DPO 等完整的 LLM 训练流程
+- **🔧 功能完整**: 支持预训练、SFT、LoRA、DPO、RLAIF 等完整的 LLM 训练流程
 - **🚀 生产就绪**: 纯 Java 实现,易于集成到企业应用,支持 REST API 部署
 - **📈 可扩展**: 支持 MoE 架构,可扩展至 145M 参数
 
@@ -21,9 +21,10 @@
 | 特性类别 | 功能说明 |
 |---------|----------|
 | **模型架构** | Transformer Decoder · 多头注意力 · RoPE 位置编码 · Pre-LayerNorm · SiLU 激活 |
-| **训练能力** | 预训练 · 监督微调(SFT) · LoRA 微调 · DPO 训练 · MoE 架构 |
+| **训练能力** | 预训练 · 监督微调(SFT) · LoRA 微调 · DPO 训练 · RLAIF(PPO/GRPO/SPO) · MoE 架构 |
 | **推理优化** | KV-Cache 加速 · 多种采样策略 · 批量推理 · 流式生成 |
-| **工程特性** | 纯 Java 实现 · V2 组件架构 · 自定义 BPE Tokenizer · CLI 工具 · REST API |
+| **工程特性** | 纯 Java 实现 · V2 组件架构 · BPE Tokenizer · CLI 工具 · REST API |
+| **训练演示** | MiniMindTrainDemo · 三阶段完整训练流程 · 超小规模教学数据集 |
 
 ## 🏗️ 架构设计
 
@@ -134,11 +135,17 @@ graph TB
 | **Transformer层** | MiniMindTransformerLayer | ✅ 完成 | Pre-LN + 残差连接 |
 | **模型主体** | MiniMindBlock | ✅ 完成 | 8层Transformer堆叠 |
 | **模型接口** | MiniMindModel | ✅ 完成 | 继承 Model,统一接口 |
-| **分词器** | MiniMindTokenizer | ✅ 完成 | 字符级 + BPE 支持 |
+| **分词器** | MiniMindTokenizer | ✅ 完成 | 字符级 + BPE 训练支持 |
 | **MoE架构** | MiniMindMoEModel | ✅ 完成 | 4专家 + 负载均衡 |
 | **推理引擎** | generate() | ✅ 完成 | Greedy/TopK/TopP/Temp |
-| **预训练** | PretrainTrainer | 📋 待实现 | 数据集 + 训练循环 |
-| **微调** | SFT/LoRA/DPO | 📋 待实现 | 指令微调 + 对齐训练 |
+| **预训练** | PretrainTrainer | ✅ 完成 | 支持训练循环与检查点 |
+| **监督微调** | SFTTrainer | ✅ 完成 | 指令微调训练器 |
+| **LoRA微调** | LoRAAdapter | ✅ 完成 | 低秩适配器 |
+| **DPO训练** | DPOTrainer | ✅ 完成 | 直接偏好优化 |
+| **RLAIF训练** | PPO/GRPO/SPO | ✅ 完成 | 强化学习训练器 |
+| **训练演示** | MiniMindTrainDemo | ✅ 完成 | 三阶段完整训练流程 |
+| **CLI工具** | train/generate/chat | ✅ 完成 | 命令行工具套件 |
+| **API服务** | CompletionHandler | ✅ 完成 | OpenAI兼容API |
 
 ## 🚀 快速开始
 
@@ -273,18 +280,20 @@ int[] combined = model.generate(tokenArray, 50, 0.8f, 40, 0.9f);
 
 | 功能模块 | 原版 MiniMind | TinyAI 实现 | 还原度 |
 |---------|---------------|------------|-------|
-| Tokenizer (BPE) | ✓ | ✅ 已完成 | 80% (字符级) |
+| Tokenizer (BPE) | ✓ | ✅ 已完成 | 100% |
 | 模型架构 (Transformer Decoder) | ✓ | ✅ 已完成 | 100% |
 | RoPE 位置编码 | ✓ | ✅ 已完成 | 100% |
 | 多头注意力 | ✓ | ✅ 已完成 | 100% |
 | KV-Cache | ✓ | ✅ 已完成 | 100% |
-| 预训练 | ✓ | 📋 待实现 | 0% |
-| SFT 微调 | ✓ | 📋 待实现 | 0% |
-| LoRA 微调 | ✓ | 📋 待实现 | 0% |
-| DPO 训练 | ✓ | 📋 待实现 | 0% |
-| RLAIF (PPO/GRPO/SPO) | ✓ | 📋 待实现 | 0% |
+| 预训练 | ✓ | ✅ 已完成 | 100% |
+| SFT 微调 | ✓ | ✅ 已完成 | 100% |
+| LoRA 微调 | ✓ | ✅ 已完成 | 100% |
+| DPO 训练 | ✓ | ✅ 已完成 | 100% |
+| RLAIF (PPO/GRPO/SPO) | ✓ | ✅ 已完成 | 100% |
 | MoE 架构 | ✓ | ✅ 已完成 | 100% |
 | 文本生成 (多种采样) | ✓ | ✅ 已完成 | 100% |
+| CLI 工具 | ✓ | ✅ 已完成 | 100% |
+| API 服务 | ✓ | ✅ 已完成 | 100% |
 
 ## 📖 V2 组件使用规范
 
@@ -332,9 +341,9 @@ import io.leavesfly.tinyai.nnet.layer.dnn.AffineLayer;
 
 ## 📝 开发状态
 
-**当前版本**: 1.0-SNAPSHOT (开发中)
+**当前版本**: 1.0-SNAPSHOT
 
-**已完成**:
+**核心功能** (100% 完成):
 - ✅ 模块基础结构搭建
 - ✅ Maven 配置和依赖管理
 - ✅ MiniMindConfig 配置类(三种预设)
@@ -344,19 +353,31 @@ import io.leavesfly.tinyai.nnet.layer.dnn.AffineLayer;
 - ✅ KVCache 缓存管理
 - ✅ MiniMindTransformerLayer Transformer 层
 - ✅ MiniMindBlock / MiniMindModel 模型主体
-- ✅ MiniMindTokenizer 分词器(字符级)
+- ✅ MiniMindTokenizer 分词器(字符级 + BPE训练)
 - ✅ 推理引擎(多种采样策略)
 - ✅ MoE 完整架构实现
 - ✅ MiniMindMoEModel MoE 模型
 - ✅ 专家路由和负载均衡
 
-**当前进度**: 85%
+**训练组件** (100% 完成):
+- ✅ PretrainTrainer 预训练训练器
+- ✅ SFTTrainer 监督微调训练器
+- ✅ LoRAAdapter LoRA适配器
+- ✅ DPOTrainer DPO训练器
+- ✅ PPO/GRPO/SPO 强化学习训练器
+- ✅ MiniMindTrainDemo 完整训练演示
 
-**待实现**:
-- 📋 完整 BPE Tokenizer 训练(已有基础实现)
-- 📋 训练组件的实际训练流程(已有框架代码)
-- 📋 更多单元测试
-- 📋 性能优化和调优
+**工具与服务** (100% 完成):
+- ✅ CLI 命令行工具(train/generate/chat等)
+- ✅ API 服务(OpenAI兼容)
+- ✅ 数据处理工具
+
+**当前进度**: 100%
+
+**持续优化**:
+- 🔄 性能优化和调优
+- 🔄 更多单元测试
+- 🔄 文档完善
 
 ## ❓ 常见问题 FAQ
 
@@ -480,13 +501,26 @@ max_batch_size = GPU_memory / (model_size + seq_len × hidden_size)
 
 ### 示例代码
 
-位于 `src/test/java/examples/`:
-- `Example01_ModelCreation.java` - 模型创建与推理
-- `Example02_Pretrain.java` - 预训练流程
-- `Example03_SFT.java` - SFT微调
-- `Example04_LoRA.java` - LoRA微调
-- `Example06_Generation.java` - 文本生成策略
-- `Example07_Evaluation.java` - 模型评估
+位于 `src/main/java/io/leavesfly/tinyai/minimind/examples/`:
+- `Example01_BasicUsage.java` - 基础使用演示
+- `Example02_TextGeneration.java` - 文本生成
+- `Example03_SFTFineTuning.java` - SFT微调
+- `Example04_LoRAFineTuning.java` - LoRA微调
+- `Example05_PreTraining.java` - 预训练
+- `Example06_DPOTraining.java` - DPO训练
+- `Example07_RLAIFTraining.java` - RLAIF训练
+- `Example08_MoEModel.java` - MoE模型使用
+- `Example09_APIServer.java` - API服务部署
+- `Example10_CLITools.java` - CLI工具使用
+
+### 完整训练演示
+
+`MiniMindTrainDemo` 提供了完整的三阶段训练流程:
+```bash
+mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.minimind.training.MiniMindTrainDemo"
+```
+
+详见: [MiniMindTrainDemo使用说明](./doc/MiniMindTrainDemo使用说明.md)
 
 ### 参考链接
 
@@ -499,31 +533,7 @@ max_batch_size = GPU_memory / (model_size + seq_len × hidden_size)
 
 ---
 
-## 📝 开发状态
 
-**当前版本**: 1.0-SNAPSHOT
-
-**已完成** (进度: 85%):
-- ✅ 模块基础结构搭建
-- ✅ Maven 配置和依赖管理
-- ✅ MiniMindConfig 配置类(三种预设)
-- ✅ TokenEmbedding 嵌入层
-- ✅ RotaryPositionEmbedding (RoPE)
-- ✅ MultiHeadAttention 多头注意力
-- ✅ KVCache 缓存管理
-- ✅ MiniMindTransformerLayer Transformer 层
-- ✅ MiniMindBlock / MiniMindModel 模型主体
-- ✅ MiniMindTokenizer 分词器(字符级)
-- ✅ 推理引擎(多种采样策略)
-- ✅ MoE 完整架构实现
-- ✅ MiniMindMoEModel MoE 模型
-- ✅ 专家路由和负载均衡
-
-**待实现** (计划中):
-- 📋 完整 BPE Tokenizer 训练(已有基础实现)
-- 📋 训练组件的实际训练流程(已有框架代码)
-- 📋 更多单元测试
-- 📋 性能优化和调优
 
 ## 📄 许可证
 
@@ -532,8 +542,8 @@ max_batch_size = GPU_memory / (model_size + seq_len × hidden_size)
 ---
 
 **版本**: 1.0-SNAPSHOT  
-**当前进度**: 85%  
-**最后更新**: 2025-12-07  
+**当前进度**: 100% (核心功能完成)  
+**最后更新**: 2025-12-16  
 **维护者**: TinyAI Team
 
 ---

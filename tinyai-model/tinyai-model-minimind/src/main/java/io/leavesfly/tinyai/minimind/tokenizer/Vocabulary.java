@@ -150,9 +150,16 @@ public class Vocabulary implements Serializable {
     }
 
     /**
-     * 获取词汇表大小
+     * 获取词汇表大小（实际添加的 token 数量）
      */
     public int getVocabSize() {
+        return tokenToId.size();
+    }
+    
+    /**
+     * 获取配置的词汇表大小（用于模型配置）
+     */
+    public int getConfiguredVocabSize() {
         return vocabSize;
     }
 

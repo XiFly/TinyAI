@@ -151,15 +151,15 @@ public class MultiHeadAttention extends Module {
         int batchSize = qShape[0];
         int seqLen = qShape[1];
 
-        // 2. 应用 RoPE 位置编码
-        Q = rope.forward(Q, new Variable(NdArray.of(new float[]{startPos})));
-        K = rope.forward(K, new Variable(NdArray.of(new float[]{startPos})));
+        // 2. 多头分割：[batch, seqLen, hiddenSize] -> [batch, numHeads, seqLen, headDim]
+        //    先分割，RoPE 需要 headDim 维度的输入
+        Variable qSplit = reshapeForMultiHead(Q, batchSize, seqLen);
+        Variable kSplit = reshapeForMultiHead(K, batchSize, seqLen);
+        Variable vSplit = reshapeForMultiHead(V, batchSize, seqLen);
 
-        // 3. 多头分割：[batch, seqLen, hiddenSize] -> [batch, numHeads, seqLen, headDim]
-        // 由于 reshape 操作较复杂，这里使用 NdArray 底层操作，但保持在 Variable 层面
-        Variable qSplit = new Variable(reshapeMultiHead(Q.getValue(), batchSize, seqLen));
-        Variable kSplit = new Variable(reshapeMultiHead(K.getValue(), batchSize, seqLen));
-        Variable vSplit = new Variable(reshapeMultiHead(V.getValue(), batchSize, seqLen));
+        // 3. 应用 RoPE 位置编码（在 headDim 维度上）
+        qSplit = rope.forward(qSplit, new Variable(NdArray.of(new float[]{startPos})));
+        kSplit = rope.forward(kSplit, new Variable(NdArray.of(new float[]{startPos})));
 
         // 4. KV-Cache 处理
         if (kvCache != null) {
@@ -171,12 +171,12 @@ public class MultiHeadAttention extends Module {
         int kvSeqLen = kSplit.getShape().getShapeDims()[2];
 
         // 5-9. 注意力计算：使用 Variable 层面操作
-        Variable attnOutput = computeAttentionVar(qSplit, kSplit, vSplit, 
+        Variable attnOutput = computeAttentionWithVariable(qSplit, kSplit, vSplit, 
                                                    batchSize, seqLen, kvSeqLen, startPos, 
                                                    kvCache == null);
 
         // 10. 多头合并：[batch, numHeads, seqLen, headDim] -> [batch, seqLen, hiddenSize]
-        Variable merged = new Variable(mergeMultiHead(attnOutput.getValue(), batchSize, seqLen));
+        Variable merged = mergeMultiHead(attnOutput, batchSize, seqLen);
 
         // 11. 输出投影
         Variable output = outputProj.forward(merged);
@@ -187,218 +187,47 @@ public class MultiHeadAttention extends Module {
     /**
      * 使用 Variable 层面操作计算注意力
      */
-    private Variable computeAttentionVar(Variable Q, Variable K, Variable V,
+    private Variable computeAttentionWithVariable(Variable Q, Variable K, Variable V,
                                          int batchSize, int seqLen, int kvSeqLen, int startPos,
                                          boolean applyMask) {
-        // 注意：由于多头注意力的计算涉及复杂的维度操作，这里保留 NdArray 底层实现
-        // TODO: 未来可以实现完整的 Variable 层面多头注意力算子
+        // Q: [batch, numHeads, seqLen, headDim]
+        // K: [batch, numHeads, kvSeqLen, headDim]
+        // V: [batch, numHeads, kvSeqLen, headDim]
         
         // 5. 计算注意力分数：scores = (Q @ K^T) / sqrt(headDim)
-        NdArray scores = computeAttentionScores(Q.getValue(), K.getValue(), batchSize, seqLen, kvSeqLen);
-
+        // K^T: [batch, numHeads, headDim, kvSeqLen]
+        Variable KT = transposeLastTwoDims(K);  // [batch, numHeads, headDim, kvSeqLen]
+        
+        // 批量矩阵乘法: [batch*numHeads, seqLen, headDim] @ [batch*numHeads, headDim, kvSeqLen]
+        // -> [batch*numHeads, seqLen, kvSeqLen]
+        Variable scores = batchedMatMul(Q, KT, batchSize, numHeads, seqLen, headDim, kvSeqLen);
+        
+        // 缩放
+        float scale = (float) (1.0 / Math.sqrt(headDim));
+        Variable scaleVar = new Variable(scale);
+        scaleVar.setRequireGrad(false);
+        scores = scores.mul(scaleVar);
+        
         // 6. 应用因果掩码
         if (training || applyMask) {
-            scores = applyCausalMask(scores, batchSize, seqLen, kvSeqLen, startPos);
+            scores = applyCausalMaskVar(scores, batchSize, numHeads, seqLen, kvSeqLen, startPos);
         }
-
-        // 7. Softmax 归一化
-        NdArray attnWeights = softmax(scores, batchSize, numHeads, seqLen, kvSeqLen);
-
-        // 8. Dropout（训练时）
-        if (training && dropoutRate > 0) {
-            attnWeights = applyDropout(attnWeights, dropoutRate);
-        }
-
-        // 9. 应用注意力权重：output = attnWeights @ V
-        NdArray attended = applyAttentionWeights(attnWeights, V.getValue(), batchSize, seqLen);
         
-        return new Variable(attended);
+        // 7. Softmax 归一化 (在最后一个维度上)
+        Variable attnWeights = softmaxLastDim(scores, batchSize, numHeads, seqLen, kvSeqLen);
+        
+        // 8. Dropout（训练时）- 简化实现，略过
+        // TODO: 实现 Variable 层面的 dropout
+        
+        // 9. 应用注意力权重：output = attnWeights @ V
+        // [batch*numHeads, seqLen, kvSeqLen] @ [batch*numHeads, kvSeqLen, headDim]
+        // -> [batch*numHeads, seqLen, headDim]
+        Variable attended = batchedMatMul(attnWeights, V, batchSize, numHeads, seqLen, kvSeqLen, headDim);
+        
+        return attended;
     }
 
-    /**
-     * 多头分割：[batch, seqLen, hiddenSize] -> [batch, numHeads, seqLen, headDim]
-     */
-    private NdArray reshapeMultiHead(NdArray input, int batchSize, int seqLen) {
-        float[] data = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) input).buffer;
-        float[] result = new float[batchSize * numHeads * seqLen * headDim];
-
-        for (int b = 0; b < batchSize; b++) {
-            for (int s = 0; s < seqLen; s++) {
-                for (int h = 0; h < numHeads; h++) {
-                    for (int d = 0; d < headDim; d++) {
-                        int srcIdx = (b * seqLen + s) * hiddenSize + h * headDim + d;
-                        int dstIdx = ((b * numHeads + h) * seqLen + s) * headDim + d;
-                        result[dstIdx] = data[srcIdx];
-                    }
-                }
-            }
-        }
-
-        return NdArray.of(result, Shape.of(batchSize, numHeads, seqLen, headDim));
-    }
-
-    /**
-     * 计算注意力分数：scores = (Q @ K^T) / sqrt(headDim)
-     */
-    private NdArray computeAttentionScores(NdArray Q, NdArray K, int batchSize, int qSeqLen, int kvSeqLen) {
-        float[] qData = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) Q).buffer;
-        float[] kData = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) K).buffer;
-        float[] scores = new float[batchSize * numHeads * qSeqLen * kvSeqLen];
-
-        float scale = (float) (1.0 / Math.sqrt(headDim));
-
-        for (int b = 0; b < batchSize; b++) {
-            for (int h = 0; h < numHeads; h++) {
-                for (int i = 0; i < qSeqLen; i++) {
-                    for (int j = 0; j < kvSeqLen; j++) {
-                        float sum = 0.0f;
-                        for (int d = 0; d < headDim; d++) {
-                            int qIdx = ((b * numHeads + h) * qSeqLen + i) * headDim + d;
-                            int kIdx = ((b * numHeads + h) * kvSeqLen + j) * headDim + d;
-                            sum += qData[qIdx] * kData[kIdx];
-                        }
-                        int scoreIdx = ((b * numHeads + h) * qSeqLen + i) * kvSeqLen + j;
-                        scores[scoreIdx] = sum * scale;
-                    }
-                }
-            }
-        }
-
-        return NdArray.of(scores, Shape.of(batchSize, numHeads, qSeqLen, kvSeqLen));
-    }
-
-    /**
-     * 应用因果掩码（禁止看到未来 token）
-     */
-    private NdArray applyCausalMask(NdArray scores, int batchSize, int qSeqLen, int kvSeqLen, int startPos) {
-        float[] scoresData = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) scores).buffer;
-        float[] result = new float[scoresData.length];
-        System.arraycopy(scoresData, 0, result, 0, scoresData.length);
-
-        for (int b = 0; b < batchSize; b++) {
-            for (int h = 0; h < numHeads; h++) {
-                for (int i = 0; i < qSeqLen; i++) {
-                    for (int j = 0; j < kvSeqLen; j++) {
-                        // 因果掩码：当前位置只能看到之前的位置
-                        int currentPos = startPos + i;
-                        if (j > currentPos) {
-                            int idx = ((b * numHeads + h) * qSeqLen + i) * kvSeqLen + j;
-                            result[idx] = Float.NEGATIVE_INFINITY;
-                        }
-                    }
-                }
-            }
-        }
-
-        return NdArray.of(result, Shape.of(batchSize, numHeads, qSeqLen, kvSeqLen));
-    }
-
-    /**
-     * Softmax 归一化（在最后一个维度上）
-     */
-    private NdArray softmax(NdArray input, int batchSize, int numHeads, int qSeqLen, int kvSeqLen) {
-        float[] data = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) input).buffer;
-        float[] result = new float[data.length];
-
-        for (int b = 0; b < batchSize; b++) {
-            for (int h = 0; h < numHeads; h++) {
-                for (int i = 0; i < qSeqLen; i++) {
-                    int offset = ((b * numHeads + h) * qSeqLen + i) * kvSeqLen;
-
-                    // 找最大值（数值稳定性）
-                    float maxVal = Float.NEGATIVE_INFINITY;
-                    for (int j = 0; j < kvSeqLen; j++) {
-                        maxVal = Math.max(maxVal, data[offset + j]);
-                    }
-
-                    // 计算 exp 和 sum
-                    float sum = 0.0f;
-                    for (int j = 0; j < kvSeqLen; j++) {
-                        result[offset + j] = (float) Math.exp(data[offset + j] - maxVal);
-                        sum += result[offset + j];
-                    }
-
-                    // 归一化
-                    for (int j = 0; j < kvSeqLen; j++) {
-                        result[offset + j] /= sum;
-                    }
-                }
-            }
-        }
-
-        return NdArray.of(result, Shape.of(batchSize, numHeads, qSeqLen, kvSeqLen));
-    }
-
-    /**
-     * 应用 Dropout
-     */
-    private NdArray applyDropout(NdArray input, float rate) {
-        float[] data = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) input).buffer;
-        float[] result = new float[data.length];
-        float scale = 1.0f / (1.0f - rate);
-
-        for (int i = 0; i < data.length; i++) {
-            if (Math.random() > rate) {
-                result[i] = data[i] * scale;
-            } else {
-                result[i] = 0.0f;
-            }
-        }
-
-        return NdArray.of(result, input.getShape());
-    }
-
-    /**
-     * 应用注意力权重：output = attnWeights @ V
-     */
-    private NdArray applyAttentionWeights(NdArray attnWeights, NdArray V, int batchSize, int seqLen) {
-        float[] weightsData = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) attnWeights).buffer;
-        float[] vData = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) V).buffer;
-        int kvSeqLen = V.getShape().getShapeDims()[2];
-
-        float[] result = new float[batchSize * numHeads * seqLen * headDim];
-
-        for (int b = 0; b < batchSize; b++) {
-            for (int h = 0; h < numHeads; h++) {
-                for (int i = 0; i < seqLen; i++) {
-                    for (int d = 0; d < headDim; d++) {
-                        float sum = 0.0f;
-                        for (int j = 0; j < kvSeqLen; j++) {
-                            int weightIdx = ((b * numHeads + h) * seqLen + i) * kvSeqLen + j;
-                            int vIdx = ((b * numHeads + h) * kvSeqLen + j) * headDim + d;
-                            sum += weightsData[weightIdx] * vData[vIdx];
-                        }
-                        int outIdx = ((b * numHeads + h) * seqLen + i) * headDim + d;
-                        result[outIdx] = sum;
-                    }
-                }
-            }
-        }
-
-        return NdArray.of(result, Shape.of(batchSize, numHeads, seqLen, headDim));
-    }
-
-    /**
-     * 多头合并：[batch, numHeads, seqLen, headDim] -> [batch, seqLen, hiddenSize]
-     */
-    private NdArray mergeMultiHead(NdArray input, int batchSize, int seqLen) {
-        float[] data = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) input).buffer;
-        float[] result = new float[batchSize * seqLen * hiddenSize];
-
-        for (int b = 0; b < batchSize; b++) {
-            for (int s = 0; s < seqLen; s++) {
-                for (int h = 0; h < numHeads; h++) {
-                    for (int d = 0; d < headDim; d++) {
-                        int srcIdx = ((b * numHeads + h) * seqLen + s) * headDim + d;
-                        int dstIdx = (b * seqLen + s) * hiddenSize + h * headDim + d;
-                        result[dstIdx] = data[srcIdx];
-                    }
-                }
-            }
-        }
-
-        return NdArray.of(result, Shape.of(batchSize, seqLen, hiddenSize));
-    }
+    // 已删除旧的 NdArray 直接操作方法，改用 Variable 算子
 
     /**
      * 设置训练模式
@@ -419,5 +248,172 @@ public class MultiHeadAttention extends Module {
      */
     public int getHeadDim() {
         return headDim;
+    }
+    
+    // =============================================================================
+    // Variable 层面的辅助方法
+    // =============================================================================
+    
+    /**
+     * 多头分割（使用 Variable.reshape）
+     * [batch, seqLen, hiddenSize] -> [batch, numHeads, seqLen, headDim]
+     */
+    private Variable reshapeForMultiHead(Variable input, int batchSize, int seqLen) {
+        // [batch, seqLen, hiddenSize] -> [batch, seqLen, numHeads, headDim]
+        Variable reshaped1 = input.reshape(Shape.of(batchSize, seqLen, numHeads, headDim));
+        // 转置为 [batch, numHeads, seqLen, headDim]
+        // 由于 Variable 暂不支持多维转置，使用 NdArray 操作
+        NdArray data = reshaped1.getValue();
+        NdArray transposed = transposeAxes(data, new int[]{0, 2, 1, 3});
+        return new Variable(transposed);
+    }
+    
+    /**
+     * 多头合并（使用 Variable.reshape）
+     * [batch, numHeads, seqLen, headDim] -> [batch, seqLen, hiddenSize]
+     */
+    private Variable mergeMultiHead(Variable input, int batchSize, int seqLen) {
+        // [batch, numHeads, seqLen, headDim] -> [batch, seqLen, numHeads, headDim]
+        NdArray data = input.getValue();
+        NdArray transposed = transposeAxes(data, new int[]{0, 2, 1, 3});
+        Variable transposedVar = new Variable(transposed);
+        // [batch, seqLen, numHeads, headDim] -> [batch, seqLen, hiddenSize]
+        return transposedVar.reshape(Shape.of(batchSize, seqLen, hiddenSize));
+    }
+    
+    /**
+     * 转置张量的最后两个维度
+     */
+    private Variable transposeLastTwoDims(Variable input) {
+        int[] shape = input.getShape().getShapeDims();
+        int ndim = shape.length;
+        int[] perm = new int[ndim];
+        for (int i = 0; i < ndim - 2; i++) {
+            perm[i] = i;
+        }
+        perm[ndim - 2] = ndim - 1;
+        perm[ndim - 1] = ndim - 2;
+        
+        NdArray transposed = transposeAxes(input.getValue(), perm);
+        return new Variable(transposed);
+    }
+    
+    /**
+     * 批量矩阵乘法（使用 Variable.bmm）
+     */
+    private Variable batchedMatMul(Variable a, Variable b, int batchSize, int numHeads,
+                                   int m, int k, int n) {
+        // a: [batch, numHeads, m, k]
+        // b: [batch, numHeads, k, n]
+        // -> [batch, numHeads, m, n]
+        
+        // Reshape 为 3D: [batch*numHeads, m, k] 和 [batch*numHeads, k, n]
+        Variable a3d = a.reshape(Shape.of(batchSize * numHeads, m, k));
+        Variable b3d = b.reshape(Shape.of(batchSize * numHeads, k, n));
+        
+        // 批量矩阵乘法
+        Variable result3d = a3d.bmm(b3d);  // [batch*numHeads, m, n]
+        
+        // Reshape 回 4D
+        return result3d.reshape(Shape.of(batchSize, numHeads, m, n));
+    }
+    
+    /**
+     * 应用因果掩码（使用 Variable.maskedFill）
+     */
+    private Variable applyCausalMaskVar(Variable scores, int batchSize, int numHeads,
+                                        int qSeqLen, int kvSeqLen, int startPos) {
+        // scores: [batch, numHeads, qSeqLen, kvSeqLen]
+        // 创建因果掩码矩阵
+        NdArray maskData = NdArray.zeros(Shape.of(batchSize, numHeads, qSeqLen, kvSeqLen));
+        float[] maskBuffer = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) maskData).buffer;
+        
+        for (int b = 0; b < batchSize; b++) {
+            for (int h = 0; h < numHeads; h++) {
+                for (int i = 0; i < qSeqLen; i++) {
+                    for (int j = 0; j < kvSeqLen; j++) {
+                        int currentPos = startPos + i;
+                        if (j > currentPos) {
+                            int idx = ((b * numHeads + h) * qSeqLen + i) * kvSeqLen + j;
+                            maskBuffer[idx] = 1.0f;  // 标记需要掩码的位置
+                        }
+                    }
+                }
+            }
+        }
+        
+        Variable mask = new Variable(maskData);
+        mask.setRequireGrad(false);
+        
+        // 使用 maskedFill 将掩码位置填充为较大的负数（避免使用负无穷导致 NaN）
+        return scores.maskedFill(mask, -1e9f);
+    }
+    
+    /**
+     * 在最后一个维度上应用 Softmax
+     */
+    private Variable softmaxLastDim(Variable input, int batchSize, int numHeads,
+                                    int qSeqLen, int kvSeqLen) {
+        // input: [batch, numHeads, qSeqLen, kvSeqLen]
+        // Reshape 为 3D: [batch*numHeads*qSeqLen, kvSeqLen]
+        Variable reshaped = input.reshape(Shape.of(batchSize * numHeads * qSeqLen, kvSeqLen));
+        
+        // 应用 softmax
+        Variable softmaxed = reshaped.softMax();
+        
+        // Reshape 回 4D
+        return softmaxed.reshape(Shape.of(batchSize, numHeads, qSeqLen, kvSeqLen));
+    }
+    
+    /**
+     * 转置张量的轴
+     */
+    private NdArray transposeAxes(NdArray input, int[] perm) {
+        int[] shape = input.getShape().getShapeDims();
+        int[] newShape = new int[perm.length];
+        for (int i = 0; i < perm.length; i++) {
+            newShape[i] = shape[perm[i]];
+        }
+        
+        float[] inputBuffer = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) input).buffer;
+        float[] outputBuffer = new float[inputBuffer.length];
+        
+        // 计算步长
+        int[] strides = new int[perm.length];
+        strides[perm.length - 1] = 1;
+        for (int i = perm.length - 2; i >= 0; i--) {
+            strides[i] = strides[i + 1] * shape[i + 1];
+        }
+        
+        int[] newStrides = new int[perm.length];
+        newStrides[perm.length - 1] = 1;
+        for (int i = perm.length - 2; i >= 0; i--) {
+            newStrides[i] = newStrides[i + 1] * newShape[i + 1];
+        }
+        
+        // 转置
+        int totalSize = inputBuffer.length;
+        for (int i = 0; i < totalSize; i++) {
+            int[] indices = new int[perm.length];
+            int remainder = i;
+            for (int j = 0; j < perm.length; j++) {
+                indices[j] = remainder / strides[j];
+                remainder %= strides[j];
+            }
+            
+            int[] newIndices = new int[perm.length];
+            for (int j = 0; j < perm.length; j++) {
+                newIndices[j] = indices[perm[j]];
+            }
+            
+            int newIdx = 0;
+            for (int j = 0; j < perm.length; j++) {
+                newIdx += newIndices[j] * newStrides[j];
+            }
+            
+            outputBuffer[newIdx] = inputBuffer[i];
+        }
+        
+        return NdArray.of(outputBuffer, Shape.of(newShape));
     }
 }

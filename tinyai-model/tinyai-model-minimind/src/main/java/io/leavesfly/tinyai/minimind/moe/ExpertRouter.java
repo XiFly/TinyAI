@@ -123,9 +123,6 @@ public class ExpertRouter extends Module {
      * @return 路由结果
      */
     private RouterOutput topKGating(Variable gateLogits, int batchSize) {
-        NdArray logitsData = gateLogits.getValue();
-        float[] logitsBuffer = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) logitsData).buffer;
-        
         // 准备输出数组
         int[][] topKIndices = new int[batchSize][topK];     // Top-K专家索引
         float[][] topKWeights = new float[batchSize][topK]; // Top-K专家权重
@@ -133,17 +130,20 @@ public class ExpertRouter extends Module {
         
         // 对每个样本进行Top-K选择
         for (int b = 0; b < batchSize; b++) {
-            // 获取当前样本的logits
-            float[] sampleLogits = new float[numExperts];
-            for (int e = 0; e < numExperts; e++) {
-                sampleLogits[e] = logitsBuffer[b * numExperts + e];
-            }
+            // 提取当前样本的logits: 使用 indexSelect
+            Variable batchIndexVar = new Variable(NdArray.of(new float[]{b}));
+            batchIndexVar.setRequireGrad(false);
+            Variable sampleLogits = gateLogits.indexSelect(0, batchIndexVar);  // [1, num_experts]
             
-            // 计算Softmax(所有专家)
-            float[] softmaxWeights = softmax(sampleLogits);
-            allWeights[b] = softmaxWeights;
+            // 计算Softmax (使用 Variable 算子)
+            Variable softmaxVar = sampleLogits.softMax();  // [1, num_experts]
+            NdArray softmaxData = softmaxVar.getValue();
+            float[] softmaxWeights = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) softmaxData).buffer;
             
-            // Top-K选择
+            // 保存所有权重
+            System.arraycopy(softmaxWeights, 0, allWeights[b], 0, numExperts);
+            
+            // Top-K选择 (离散操作，不参与梯度计算)
             Integer[] indices = new Integer[numExperts];
             for (int i = 0; i < numExperts; i++) {
                 indices[i] = i;
@@ -189,37 +189,7 @@ public class ExpertRouter extends Module {
         return gateLogits;
     }
     
-    /**
-     * Softmax计算
-     */
-    private float[] softmax(float[] logits) {
-        int len = logits.length;
-        float[] result = new float[len];
-        
-        // 找到最大值(数值稳定性)
-        float maxLogit = logits[0];
-        for (float logit : logits) {
-            if (logit > maxLogit) {
-                maxLogit = logit;
-            }
-        }
-        
-        // 计算exp和sum
-        float sum = 0.0f;
-        for (int i = 0; i < len; i++) {
-            result[i] = (float) Math.exp(logits[i] - maxLogit);
-            sum += result[i];
-        }
-        
-        // 归一化
-        if (sum > 0) {
-            for (int i = 0; i < len; i++) {
-                result[i] /= sum;
-            }
-        }
-        
-        return result;
-    }
+    // 已删除 softmax 方法，改用 Variable.softMax() 算子
     
     /**
      * 获取输入维度
