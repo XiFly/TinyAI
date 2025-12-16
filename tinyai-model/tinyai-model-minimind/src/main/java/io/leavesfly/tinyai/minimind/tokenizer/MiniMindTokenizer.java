@@ -45,6 +45,16 @@ public class MiniMindTokenizer implements Serializable {
      * 是否使用BPE模式
      */
     private final boolean useBPE;
+    
+    /**
+     * 是否使用单词级分词
+     */
+    private final boolean useWordLevel;
+    
+    /**
+     * 词汇表是否已冻结（类似GPT1 SimpleTokenizer）
+     */
+    private boolean frozen = false;
 
     /**
      * 预分词正则表达式
@@ -60,10 +70,18 @@ public class MiniMindTokenizer implements Serializable {
      * @param bpeMerges  BPE merge规则
      */
     public MiniMindTokenizer(Vocabulary vocabulary, int maxSeqLen, List<String> bpeMerges) {
+        this(vocabulary, maxSeqLen, bpeMerges, false);
+    }
+    
+    /**
+     * 完整构造函数
+     */
+    public MiniMindTokenizer(Vocabulary vocabulary, int maxSeqLen, List<String> bpeMerges, boolean useWordLevel) {
         this.vocabulary = vocabulary;
         this.maxSeqLen = maxSeqLen;
         this.bpeMerges = bpeMerges != null ? new ArrayList<>(bpeMerges) : new ArrayList<>();
         this.useBPE = !this.bpeMerges.isEmpty();
+        this.useWordLevel = useWordLevel;
     }
 
     /**
@@ -93,6 +111,99 @@ public class MiniMindTokenizer implements Serializable {
     }
     
     /**
+     * 创建单词级 Tokenizer
+     * 每个单词作为一个 token，生成时输出完整单词
+     *
+     * @param vocabSize  词汇表大小
+     * @param maxSeqLen  最大序列长度
+     * @return Tokenizer 实例
+     */
+    public static MiniMindTokenizer createWordLevelTokenizer(int vocabSize, int maxSeqLen) {
+        Vocabulary vocab = new Vocabulary(vocabSize);
+        
+        // 添加常用英文单词
+        String[] commonWords = {
+            // 基本词汇
+            "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+            "have", "has", "had", "do", "does", "did", "will", "would", "could", "should",
+            "can", "may", "might", "must", "shall", "to", "of", "in", "for", "on",
+            "with", "at", "by", "from", "as", "into", "through", "during", "before", "after",
+            "above", "below", "between", "under", "again", "further", "then", "once",
+            // 代词
+            "I", "you", "he", "she", "it", "we", "they", "me", "him", "her", "us", "them",
+            "my", "your", "his", "its", "our", "their", "this", "that", "these", "those",
+            // 疑问词
+            "what", "which", "who", "whom", "whose", "where", "when", "why", "how",
+            // 连接词
+            "and", "but", "or", "nor", "so", "yet", "because", "although", "if", "unless",
+            // 常用动词
+            "say", "said", "get", "got", "go", "went", "gone", "come", "came", "make", "made",
+            "know", "knew", "known", "think", "thought", "see", "saw", "seen", "want", "wanted",
+            "use", "used", "find", "found", "give", "gave", "given", "tell", "told",
+            "work", "worked", "call", "called", "try", "tried", "ask", "asked", "need", "needed",
+            "feel", "felt", "become", "became", "leave", "left", "put", "keep", "kept", "let",
+            "begin", "began", "begun", "seem", "seemed", "help", "helped", "show", "showed", "shown",
+            // 常用名词
+            "time", "year", "people", "way", "day", "man", "woman", "child", "children",
+            "world", "life", "hand", "part", "place", "case", "week", "company", "system",
+            "program", "question", "work", "government", "number", "night", "point", "home",
+            "water", "room", "mother", "father", "area", "money", "story", "fact", "month",
+            // 常用形容词
+            "good", "bad", "new", "old", "great", "high", "small", "large", "big", "long",
+            "little", "own", "other", "right", "wrong", "same", "different", "important",
+            "public", "early", "young", "free", "last", "first", "second", "third",
+            // AI/ML相关
+            "machine", "learning", "deep", "neural", "network", "networks", "model", "models",
+            "data", "training", "algorithm", "algorithms", "artificial", "intelligence",
+            "computer", "science", "function", "functions", "input", "output", "layer", "layers",
+            "weight", "weights", "bias", "parameter", "parameters", "gradient", "loss",
+            "optimization", "prediction", "classification", "regression", "feature", "features",
+            // 编程相关
+            "Python", "Java", "code", "program", "programming", "write", "written", "define",
+            "class", "method", "variable", "value", "return", "type", "string", "integer",
+            "list", "array", "loop", "condition", "error", "exception", "test", "debug",
+            // 标点符号
+            ".", ",", "!", "?", ":", ";", "'", "\"", "(", ")", "[", "]", "-", "_", "/",
+            // 空格和换行
+            " ", "\n", "\t",
+            // 常用短语
+            "Answer", "Question", "Instruction", "Task", "Explain", "Define", "Write",
+            "How", "What", "Why", "When", "Where", "Which", "Who"
+        };
+        
+        for (String word : commonWords) {
+            if (vocab.getVocabSize() >= vocabSize) break;
+            vocab.addToken(word);
+        }
+        
+        // 添加单个字母作为备用
+        for (char c = 'a'; c <= 'z' && vocab.getVocabSize() < vocabSize; c++) {
+            vocab.addToken(String.valueOf(c));
+        }
+        for (char c = 'A'; c <= 'Z' && vocab.getVocabSize() < vocabSize; c++) {
+            vocab.addToken(String.valueOf(c));
+        }
+        for (char c = '0'; c <= '9' && vocab.getVocabSize() < vocabSize; c++) {
+            vocab.addToken(String.valueOf(c));
+        }
+        
+        return new MiniMindTokenizer(vocab, maxSeqLen, null, true);
+    }
+    
+    /**
+     * 创建动态词汇表 Tokenizer（类似 GPT1 SimpleTokenizer）
+     * 从训练数据动态学习词汇表
+     *
+     * @param maxSeqLen  最大序列长度
+     * @return Tokenizer 实例
+     */
+    public static MiniMindTokenizer createSimpleTokenizer(int maxSeqLen) {
+        // 创建空词汇表，仅包含特殊 token
+        Vocabulary vocab = new Vocabulary(10000);  // 预留足够空间
+        return new MiniMindTokenizer(vocab, maxSeqLen, null, true);
+    }
+    
+    /**
      * 从 BPE 训练器创建 Tokenizer
      * 
      * @param trainer BPE训练器
@@ -103,6 +214,27 @@ public class MiniMindTokenizer implements Serializable {
         Vocabulary vocab = new Vocabulary(trainer.getVocab());
         List<String> merges = trainer.getMerges();
         return new MiniMindTokenizer(vocab, maxSeqLen, merges);
+    }
+
+    /**
+     * 冻结词汇表，不再添加新词
+     */
+    public void freeze() {
+        this.frozen = true;
+    }
+    
+    /**
+     * 解冻词汇表，允许添加新词
+     */
+    public void unfreeze() {
+        this.frozen = false;
+    }
+    
+    /**
+     * 检查词汇表是否已冻结
+     */
+    public boolean isFrozen() {
+        return frozen;
     }
 
     /**
@@ -181,6 +313,10 @@ public class MiniMindTokenizer implements Serializable {
             // 使用BPE编码
             List<Integer> bpeIds = encodeBPE(text);
             tokenIds.addAll(bpeIds);
+        } else if (useWordLevel) {
+            // 单词级编码
+            List<Integer> wordIds = encodeWordLevel(text);
+            tokenIds.addAll(wordIds);
         } else {
             // 字符级编码
             for (char c : text.toCharArray()) {
@@ -259,6 +395,78 @@ public class MiniMindTokenizer implements Serializable {
         
         return newTokens;
     }
+    
+    /**
+     * 单词级编码
+     * 按空格和标点分割文本，每个单词作为一个 token
+     * 
+     * @param text 文本
+     * @return Token IDs
+     */
+    private List<Integer> encodeWordLevel(String text) {
+        List<Integer> tokenIds = new ArrayList<>();
+        
+        // 简单的空格分词（类似 GPT1 SimpleTokenizer）
+        String[] words = text.split("\\s+");
+        for (String word : words) {
+            if (word.isEmpty()) continue;
+            
+            // 检查是否包含标点，如果包含则分离
+            List<String> tokens = splitPunctuation(word);
+            for (String token : tokens) {
+                if (token.isEmpty()) continue;
+                
+                if (vocabulary.containsToken(token)) {
+                    tokenIds.add(vocabulary.getTokenId(token));
+                } else if (!frozen) {
+                    // 词汇表未冻结，动态添加新词
+                    int newId = vocabulary.addToken(token);
+                    tokenIds.add(newId);
+                } else {
+                    // 词汇表已冻结，使用 <unk>
+                    tokenIds.add(vocabulary.getUnkTokenId());
+                }
+            }
+        }
+        
+        return tokenIds;
+    }
+    
+    /**
+     * 分离单词中的标点符号
+     */
+    private List<String> splitPunctuation(String word) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        
+        for (char c : word.toCharArray()) {
+            if (isPunctuation(c)) {
+                if (current.length() > 0) {
+                    tokens.add(current.toString());
+                    current = new StringBuilder();
+                }
+                tokens.add(String.valueOf(c));
+            } else {
+                current.append(c);
+            }
+        }
+        
+        if (current.length() > 0) {
+            tokens.add(current.toString());
+        }
+        
+        return tokens;
+    }
+    
+    /**
+     * 检查是否为标点符号
+     */
+    private boolean isPunctuation(char c) {
+        return c == '.' || c == ',' || c == '!' || c == '?' || 
+               c == ':' || c == ';' || c == '\'' || c == '"' ||
+               c == '(' || c == ')' || c == '[' || c == ']' ||
+               c == '-' || c == '_' || c == '/';
+    }
 
     /**
      * 解码 Token IDs
@@ -285,15 +493,25 @@ public class MiniMindTokenizer implements Serializable {
             specialIds.add(vocabulary.getPadTokenId());
             specialIds.add(vocabulary.getBosTokenId());
             specialIds.add(vocabulary.getEosTokenId());
+            specialIds.add(vocabulary.getUnkTokenId());
         }
         
+        String prevToken = null;
         for (int id : tokenIds) {
             if (skipSpecial && specialIds.contains(id)) {
                 continue;
             }
             
             String token = vocabulary.getToken(id);
+            
+            // 在单词之间添加空格（标点符号不加）
+            if (prevToken != null && !isPunctuation(token.charAt(0)) && 
+                !isPunctuation(prevToken.charAt(prevToken.length() - 1))) {
+                sb.append(" ");
+            }
+            
             sb.append(token);
+            prevToken = token;
         }
         
         return sb.toString();

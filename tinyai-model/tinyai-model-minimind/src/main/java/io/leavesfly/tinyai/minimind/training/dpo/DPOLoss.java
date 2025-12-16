@@ -2,6 +2,7 @@ package io.leavesfly.tinyai.minimind.training.dpo;
 
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
+import io.leavesfly.tinyai.ndarr.Shape;
 
 /**
  * DPO (Direct Preference Optimization) 损失函数
@@ -64,8 +65,9 @@ public class DPOLoss {
         Variable scaledReward = implicitReward.mul(new Variable(NdArray.of(beta)));
         
         // 计算sigmoid损失: -log(σ(scaled_reward))
-        // 等价于: log(1 + exp(-scaled_reward))
-        Variable dpoLoss = logSigmoid(scaledReward.mul(new Variable(NdArray.of(-1.0f))));
+        // 等价于: log(1 + exp(-scaled_reward)) = softplus(-scaled_reward)
+        Variable negScaledReward = scaledReward.mul(new Variable(NdArray.of(-1.0f)));
+        Variable dpoLoss = softplus(negScaledReward);
         
         // 应用标签平滑
         if (labelSmoothing > 0) {
@@ -114,49 +116,62 @@ public class DPOLoss {
     
     /**
      * 计算序列的对数概率
+     * 使用 mask 排除 prompt 部分，只计算 response 部分的对数概率
      * 
      * @param logits 模型输出logits [batch, seq_len, vocab_size]
      * @param labels 标签 [batch, seq_len]
-     * @param mask 掩码 [batch, seq_len], 1表示计算,0表示忽略
+     * @param mask 掩码 [batch, seq_len], 1表示计算(response)，0表示忽略(prompt)
      * @return 每个序列的平均对数概率
      */
     public Variable computeLogProbs(Variable logits, Variable labels, Variable mask) {
-        // 计算log softmax
-        Variable logProbs = logSoftmax(logits);
+        // 获取维度信息
+        int[] logitsShape = logits.getValue().getShape().getShapeDims();
+        int batchSize = logitsShape[0];
+        int seqLen = logitsShape[1];
+        int vocabSize = logitsShape[2];
         
-        // 提取对应标签的log概率
-        // 这里需要gather操作,简化实现使用交叉熵的负值
-        Variable nll = negativeLogLikelihood(logProbs, labels);
+        // 获取原始数据
+        float[] logitsData = logits.getValue().getArray();
+        float[] labelsData = labels.getValue().getArray();
+        float[] maskData = mask.getValue().getArray();
         
-        // 应用mask
-        Variable maskedNll = nll.mul(mask);
+        // 计算每个 token 的 log 概率
+        float totalLogProb = 0.0f;
+        int validTokens = 0;
         
-        // 计算平均(考虑mask)
-        Variable sumMask = mask.sum();
-        Variable totalNll = maskedNll.sum();
+        for (int b = 0; b < batchSize; b++) {
+            for (int s = 0; s < seqLen; s++) {
+                int flatIdx = b * seqLen + s;
+                
+                // 只计算 mask=1 的位置 (response 部分)
+                if (maskData[flatIdx] > 0.5f) {
+                    int labelIdx = (int) labelsData[flatIdx];
+                    
+                    // 提取当前位置的 logits
+                    int logitsOffset = (b * seqLen + s) * vocabSize;
+                    
+                    // 计算 log softmax
+                    float maxLogit = Float.NEGATIVE_INFINITY;
+                    for (int v = 0; v < vocabSize; v++) {
+                        maxLogit = Math.max(maxLogit, logitsData[logitsOffset + v]);
+                    }
+                    
+                    float sumExp = 0.0f;
+                    for (int v = 0; v < vocabSize; v++) {
+                        sumExp += (float) Math.exp(logitsData[logitsOffset + v] - maxLogit);
+                    }
+                    float logSumExp = maxLogit + (float) Math.log(sumExp);
+                    
+                    // log 概率 = logit - log_sum_exp
+                    float logProb = logitsData[logitsOffset + labelIdx] - logSumExp;
+                    totalLogProb += logProb;
+                    validTokens++;
+                }
+            }
+        }
         
-        // 返回负值(因为nll是负对数概率)
-        return totalNll.div(sumMask).mul(new Variable(NdArray.of(-1.0f)));
-    }
-    
-    /**
-     * Log Softmax实现 - 简化版本
-     */
-    private Variable logSoftmax(Variable x) {
-        // log_softmax(x) = x - log(sum(exp(x)))
-        // 简化实现,避免使用max()方法
-        Variable expX = x.exp();
-        Variable sumExp = expX.sum();
-        Variable logSumExp = sumExp.log();
-        return x.sub(logSumExp);
-    }
-    
-    /**
-     * 负对数似然
-     */
-    private Variable negativeLogLikelihood(Variable logProbs, Variable labels) {
-        // 简化实现:使用交叉熵计算
-        // 实际应该gather对应label的log概率
-        return logProbs.mul(new Variable(NdArray.of(-1.0f)));
+        // 返回平均 log 概率
+        float avgLogProb = validTokens > 0 ? totalLogProb / validTokens : 0.0f;
+        return new Variable(NdArray.of(avgLogProb));
     }
 }

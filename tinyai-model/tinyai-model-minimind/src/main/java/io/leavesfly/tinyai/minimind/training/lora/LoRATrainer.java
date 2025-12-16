@@ -3,7 +3,7 @@ package io.leavesfly.tinyai.minimind.training.lora;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.minimind.model.MiniMindModel;
 import io.leavesfly.tinyai.minimind.training.dataset.SFTDataset;
-import io.leavesfly.tinyai.ml.loss.SoftmaxCrossEntropy;
+import io.leavesfly.tinyai.ml.loss.MaskedSoftmaxCELoss;
 import io.leavesfly.tinyai.ml.optimize.Adam;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.nnet.v1.ParameterV1;
@@ -30,7 +30,7 @@ public class LoRATrainer {
     private final MiniMindModel model;
     private final SFTDataset dataset;
     private final LoRAConfig loraConfig;
-    private final SoftmaxCrossEntropy lossFunction;
+    private final MaskedSoftmaxCELoss lossFunction;
     private final Adam optimizer;
     
     private int maxEpochs;
@@ -51,7 +51,7 @@ public class LoRATrainer {
         this.model = model;
         this.dataset = dataset;
         this.loraConfig = loraConfig;
-        this.lossFunction = new SoftmaxCrossEntropy();
+        this.lossFunction = new MaskedSoftmaxCELoss();
         
         // 默认配置(LoRA通常使用更高的学习率)
         this.maxEpochs = 3;
@@ -74,21 +74,37 @@ public class LoRATrainer {
     
     /**
      * 冻结非LoRA参数
+     * 注意: 如果模型没有LoRA参数,则不冻结任何参数(退化为全参数微调)
      */
     private void freezeNonLoRAParams() {
         int frozenCount = 0;
         int loraCount = 0;
+        int totalParams = 0;
         
+        // 先统计LoRA参数数量
+        for (var entry : model.getAllParams().entrySet()) {
+            String paramName = entry.getKey();
+            totalParams++;
+            if (paramName.toLowerCase().contains("lora")) {
+                loraCount++;
+            }
+        }
+        
+        // 如果没有LoRA参数,退化为全参数微调
+        if (loraCount == 0) {
+            System.out.println("⚠️ 未检测到LoRA参数,退化为全参数微调模式");
+            System.out.println("可训练参数: " + totalParams);
+            return;
+        }
+        
+        // 存在LoRA参数时,冻结非LoRA参数
         for (var entry : model.getAllParams().entrySet()) {
             String paramName = entry.getKey();
             ParameterV1 param = entry.getValue();
             
-            // 只保留名称中包含"lora"的参数梯度
             if (!paramName.toLowerCase().contains("lora")) {
                 param.clearGrad();
                 frozenCount++;
-            } else {
-                loraCount++;
             }
         }
         
@@ -184,7 +200,6 @@ public class LoRATrainer {
     private float trainStep(SFTDataset.Batch batch) {
         NdArray inputArray = batch.getInput();
         NdArray labelArray = batch.getLabels();
-        NdArray maskArray = batch.getLossMask();
         
         Variable input = new Variable(inputArray);
         Variable labels = new Variable(labelArray);
@@ -192,64 +207,41 @@ public class LoRATrainer {
         // 前向传播
         Variable logits = model.predict(input);
         
-        // 计算损失
+        // 使用 MaskedSoftmaxCELoss 计算损失（内置处理 3D logits 和 mask）
+        // labels: [batch, seqLen], logits: [batch, seqLen, vocabSize]
         Variable loss = lossFunction.loss(labels, logits);
         
-        // 应用损失掩码
-        Variable maskedLoss = applyLossMask(loss, maskArray);
-        
-        float lossValue = maskedLoss.getValue().getNumber().floatValue();
+        float lossValue = loss.getValue().getNumber().floatValue();
         
         // 清除梯度
         model.clearGrads();
         
         // 反向传播
-        maskedLoss.backward();
+        loss.backward();
         
-        // 梯度裁剪(仅针对LoRA参数)
-        clipLoRAGradients();
+        // 梯度裁剪
+        clipGradients();
         
-        // 更新参数(仅更新LoRA参数)
+        // 更新参数
         optimizer.update();
         
         // 断开计算图
-        maskedLoss.unChainBackward();
+        loss.unChainBackward();
         
         return lossValue;
     }
     
     /**
-     * 应用损失掩码
+     * 梯度裁剪
      */
-    private Variable applyLossMask(Variable loss, NdArray mask) {
-        Variable maskVar = new Variable(mask);
-        Variable maskedLoss = loss.mul(maskVar);
-        
-        float[] maskData = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) mask).buffer;
-        float maskSum = 0;
-        for (float m : maskData) {
-            maskSum += m;
-        }
-        
-        if (maskSum > 0) {
-            return maskedLoss.div(new Variable(NdArray.of(maskSum)));
-        }
-        
-        return maskedLoss;
-    }
-    
-    /**
-     * 梯度裁剪(仅针对LoRA参数)
-     */
-    private void clipLoRAGradients() {
+    private void clipGradients() {
         double totalNorm = 0.0;
         
-        // 计算LoRA参数的梯度范数
+        // 计算所有可训练参数的梯度范数
         for (var entry : model.getAllParams().entrySet()) {
-            String paramName = entry.getKey();
             ParameterV1 param = entry.getValue();
             
-            if (paramName.toLowerCase().contains("lora") && param.getGrad() != null) {
+            if (param.getGrad() != null) {
                 NdArray grad = param.getGrad();
                 float[] gradData = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) grad).buffer;
                 
@@ -266,10 +258,9 @@ public class LoRATrainer {
             float clipCoef = maxGradNorm / (float) totalNorm;
             
             for (var entry : model.getAllParams().entrySet()) {
-                String paramName = entry.getKey();
                 ParameterV1 param = entry.getValue();
                 
-                if (paramName.toLowerCase().contains("lora") && param.getGrad() != null) {
+                if (param.getGrad() != null) {
                     NdArray grad = param.getGrad();
                     float[] gradData = ((io.leavesfly.tinyai.ndarr.cpu.NdArrayCpu) grad).buffer;
                     
@@ -316,7 +307,7 @@ public class LoRATrainer {
      */
     public void printTrainableParams() {
         int totalParams = 0;
-        int trainableParams = 0;
+        int loraParams = 0;
         
         for (var entry : model.getAllParams().entrySet()) {
             String paramName = entry.getKey();
@@ -325,16 +316,18 @@ public class LoRATrainer {
             
             totalParams += paramCount;
             if (paramName.toLowerCase().contains("lora")) {
-                trainableParams += paramCount;
+                loraParams += paramCount;
             }
         }
         
+        // 如果没有LoRA参数,所有参数都是可训练的(全参数微调模式)
+        int trainableParams = loraParams > 0 ? loraParams : totalParams;
         float percentage = (float) trainableParams / totalParams * 100;
         
         System.out.println("=".repeat(60));
         System.out.println("参数统计:");
         System.out.println("  总参数: " + totalParams);
-        System.out.println("  可训练参数: " + trainableParams);
+        System.out.println("  可训练参数: " + trainableParams + (loraParams == 0 ? " (全参数微调)" : " (LoRA)"));
         System.out.println("  训练参数占比: " + String.format("%.2f%%", percentage));
         System.out.println("=".repeat(60));
     }

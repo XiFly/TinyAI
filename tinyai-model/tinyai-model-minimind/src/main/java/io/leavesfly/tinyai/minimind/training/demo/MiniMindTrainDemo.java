@@ -1,0 +1,81 @@
+package io.leavesfly.tinyai.minimind.training.demo;
+
+import io.leavesfly.tinyai.minimind.model.MiniMindModel;
+
+import static io.leavesfly.tinyai.minimind.training.demo.DemoDataGenerator.*;
+import static io.leavesfly.tinyai.minimind.training.demo.DemoTrainingStages.*;
+
+/**
+ * MiniMind 完整训练演示 - 主入口
+ * <p>
+ * 提供完整的 LLM 训练流程演示：
+ * 1. 数据准备 - 生成各阶段训练数据
+ * 2. 预训练 - 无监督语言建模
+ * 3. SFT微调 - 监督指令微调
+ * 4. LoRA微调 - 参数高效微调
+ * 5. DPO训练 - 直接偏好优化
+ * 6. RL训练 - 强化学习优化
+ * 7. 推理测试 - 文本生成
+ * <p>
+ * 数据集特点：超小规模、适合教学、覆盖完整流程
+ * <p>
+ * 代码结构：
+ * - {@link DemoConfig} - 配置与工具类
+ * - {@link DemoDataGenerator} - 数据生成器
+ * - {@link DemoTrainingStages} - 训练阶段执行器
+ *
+ * @author TinyAI Team
+ * @version 2.0
+ */
+public class MiniMindTrainDemo {
+
+    public static void main(String[] args) {
+        printBanner();
+
+        try {
+            // 步骤0: 准备数据集
+            prepareDatasets();
+
+            // 步骤1: 无监督预训练
+            MiniMindModel pretrainedModel = runUnsupervisedPretraining();
+
+            // 步骤2: 监督微调（SFT）
+            MiniMindModel sftModel = runSupervisedFinetuning(pretrainedModel);
+
+            // 步骤3: LoRA微调
+            MiniMindModel loraModel = runLoRAFinetuning(sftModel);
+
+            // 步骤4: DPO训练
+            MiniMindModel dpoModel = runDPOTraining(loraModel);
+
+            // 步骤5: 强化学习训练
+            MiniMindModel rlModel = runReinforcementLearningTraining(dpoModel);
+
+            // 步骤6: 推理测试
+            runInference(rlModel);
+
+            printSuccess();
+
+        } catch (Exception e) {
+            System.err.println("❌ 训练过程出错: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void printBanner() {
+        System.out.println("=".repeat(80));
+        System.out.println("MiniMind 完整训练与推理演示");
+        System.out.println("适用于教学和学习的超小规模数据集训练方案");
+        System.out.println("=".repeat(80));
+        System.out.println();
+        System.out.println("训练流程:");
+        System.out.println("  [0] 数据准备 → [1] 预训练 → [2] SFT → [3] LoRA → [4] DPO → [5] RL → [6] 推理");
+        System.out.println();
+    }
+
+    private static void printSuccess() {
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("✅ 完整训练流程演示成功!");
+        System.out.println("=".repeat(80));
+    }
+}

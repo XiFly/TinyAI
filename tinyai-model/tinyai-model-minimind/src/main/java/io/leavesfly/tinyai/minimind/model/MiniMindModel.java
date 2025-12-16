@@ -3,10 +3,19 @@ package io.leavesfly.tinyai.minimind.model;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ml.Model;
 import io.leavesfly.tinyai.minimind.model.attention.KVCache;
+import io.leavesfly.tinyai.minimind.model.attention.MultiHeadAttention;
+import io.leavesfly.tinyai.minimind.model.transformer.MiniMindTransformerLayer;
+import io.leavesfly.tinyai.minimind.training.lora.LoRAConfig;
+import io.leavesfly.tinyai.minimind.training.lora.LoRALinear;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
+import io.leavesfly.tinyai.nnet.v2.core.Parameter;
+import io.leavesfly.tinyai.nnet.v2.layer.dnn.Linear;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * MiniMind 语言模型
@@ -117,6 +126,14 @@ public class MiniMindModel extends Model {
      */
     public int[] generate(int[] promptTokenIds, int maxNewTokens, 
                          float temperature, int topK, float topP) {
+        return generate(promptTokenIds, maxNewTokens, temperature, topK, topP, 1.2f);
+    }
+    
+    /**
+     * 生成文本（带重复惩罚）
+     */
+    public int[] generate(int[] promptTokenIds, int maxNewTokens, 
+                         float temperature, int topK, float topP, float repetitionPenalty) {
         // 设置为推理模式
         miniMindBlock.setTraining(false);
 
@@ -128,6 +145,12 @@ public class MiniMindModel extends Model {
         System.arraycopy(promptTokenIds, 0, outputTokens, 0, promptTokenIds.length);
 
         int currentLen = promptTokenIds.length;
+        
+        // 记录已生成的 token 用于重复惩罚
+        Set<Integer> generatedTokens = new HashSet<>();
+        for (int id : promptTokenIds) {
+            generatedTokens.add(id);
+        }
 
         // 首次前向传播（处理完整提示词）
         NdArray promptNdArray = createTokenIdsArray(promptTokenIds);
@@ -149,12 +172,18 @@ public class MiniMindModel extends Model {
             // 获取最后一个位置的 logits: [1, vocab_size]
             NdArray lastLogits = extractLastLogits(logits.getValue());
 
+            // 应用重复惩罚
+            if (repetitionPenalty != 1.0f) {
+                lastLogits = applyRepetitionPenalty(lastLogits, generatedTokens, repetitionPenalty);
+            }
+
             // 采样下一个 token
             int nextToken = sampleToken(lastLogits, temperature, topK, topP);
 
             // 添加到输出序列
             outputTokens[currentLen] = nextToken;
             currentLen++;
+            generatedTokens.add(nextToken);
 
             // 检查是否遇到结束符（假设 EOS token ID 为 2）
             if (nextToken == 2) {
@@ -170,6 +199,25 @@ public class MiniMindModel extends Model {
         miniMindBlock.clearKVCaches(kvCaches);
 
         return result;
+    }
+    
+    /**
+     * 应用重复惩罚
+     */
+    private NdArray applyRepetitionPenalty(NdArray logits, Set<Integer> generatedTokens, float penalty) {
+        float[] logitsArray = logits.getArray().clone();
+        
+        for (int tokenId : generatedTokens) {
+            if (tokenId >= 0 && tokenId < logitsArray.length) {
+                if (logitsArray[tokenId] > 0) {
+                    logitsArray[tokenId] /= penalty;
+                } else {
+                    logitsArray[tokenId] *= penalty;
+                }
+            }
+        }
+        
+        return NdArray.of(logitsArray, logits.getShape());
     }
 
     /**
@@ -405,5 +453,127 @@ public class MiniMindModel extends Model {
     public void printModelInfo() {
         miniMindBlock.printModelInfo();
         super.printModelInfo();
+    }
+    
+    /**
+     * 应用 LoRA 层注入
+     * <p>
+     * 将目标模块的 Linear 层替换为 LoRALinear 层
+     * 
+     * @param loraConfig LoRA 配置
+     * @return 注入的 LoRA 层数量
+     */
+    public int applyLoRA(LoRAConfig loraConfig) {
+        int injectedCount = 0;
+        List<String> targetModules = Arrays.asList(loraConfig.getTargetModules());
+        
+        // 遍历所有 Transformer 层
+        for (MiniMindTransformerLayer layer : miniMindBlock.getLayers()) {
+            MultiHeadAttention attention = layer.getAttention();
+            int hiddenSize = attention.getHiddenSize();
+            
+            // 检查是否需要注入 queryProj
+            if (targetModules.contains("queryProj") || targetModules.contains("query_proj")) {
+                if (attention.getQueryProj() instanceof Linear) {
+                    Linear originalLinear = (Linear) attention.getQueryProj();
+                    LoRALinear loraLinear = createLoRALinear(
+                        "query_proj_lora", 
+                        originalLinear, 
+                        hiddenSize, 
+                        hiddenSize, 
+                        loraConfig
+                    );
+                    attention.setQueryProj(loraLinear);
+                    injectedCount++;
+                }
+            }
+            
+            // 检查是否需要注入 valueProj
+            if (targetModules.contains("valueProj") || targetModules.contains("value_proj")) {
+                if (attention.getValueProj() instanceof Linear) {
+                    Linear originalLinear = (Linear) attention.getValueProj();
+                    LoRALinear loraLinear = createLoRALinear(
+                        "value_proj_lora", 
+                        originalLinear, 
+                        hiddenSize, 
+                        hiddenSize, 
+                        loraConfig
+                    );
+                    attention.setValueProj(loraLinear);
+                    injectedCount++;
+                }
+            }
+        }
+        
+        if (injectedCount > 0) {
+            System.out.println("✅ LoRA 层注入完成: " + injectedCount + " 个层");
+        } else {
+            System.out.println("⚠️ 未注入任何 LoRA 层");
+        }
+        
+        return injectedCount;
+    }
+    
+    /**
+     * 从现有 Linear 层创建 LoRALinear
+     */
+    private LoRALinear createLoRALinear(String name, Linear originalLinear, 
+                                        int inFeatures, int outFeatures, 
+                                        LoRAConfig loraConfig) {
+        // 获取原始权重
+        Parameter originalWeight = originalLinear.getWeight();
+        Parameter originalBias = originalLinear.getBias();
+        
+        // 创建 LoRALinear
+        LoRALinear loraLinear = LoRALinear.fromLinear(
+            name,
+            originalWeight,
+            originalBias,
+            loraConfig.getRank(),
+            loraConfig.getAlpha(),
+            loraConfig.getDropout()
+        );
+        
+        return loraLinear;
+    }
+    
+    /**
+     * 获取 LoRA 参数统计
+     */
+    public void printLoRAStats() {
+        int loraParams = 0;
+        int totalParams = 0;
+        int loraLayers = 0;
+        
+        for (MiniMindTransformerLayer layer : miniMindBlock.getLayers()) {
+            MultiHeadAttention attention = layer.getAttention();
+            
+            if (attention.getQueryProj() instanceof LoRALinear) {
+                LoRALinear lora = (LoRALinear) attention.getQueryProj();
+                loraParams += lora.getLoRAParams();
+                totalParams += lora.getOriginalParams();
+                loraLayers++;
+            }
+            
+            if (attention.getValueProj() instanceof LoRALinear) {
+                LoRALinear lora = (LoRALinear) attention.getValueProj();
+                loraParams += lora.getLoRAParams();
+                totalParams += lora.getOriginalParams();
+                loraLayers++;
+            }
+        }
+        
+        if (loraLayers > 0) {
+            float ratio = (float) loraParams / totalParams * 100;
+            System.out.println("=".repeat(60));
+            System.out.println("LoRA 参数统计:");
+            System.out.println("  LoRA 层数量: " + loraLayers);
+            System.out.println("  LoRA 参数量: " + loraParams);
+            System.out.println("  原始参数量: " + totalParams);
+            System.out.println("  参数压缩比: " + String.format("%.2f%%", ratio));
+            System.out.println("=".repeat(60));
+        } else {
+            System.out.println("⚠️ 未检测到 LoRA 层");
+        }
     }
 }

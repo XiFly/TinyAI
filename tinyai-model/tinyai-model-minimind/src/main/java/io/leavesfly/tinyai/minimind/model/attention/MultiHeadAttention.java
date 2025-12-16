@@ -50,24 +50,24 @@ public class MultiHeadAttention extends Module {
     private final int headDim;
 
     /**
-     * Query 投影层
+     * Query 投影层（支持 LoRA 替换）
      */
-    private final Linear queryProj;
+    private Module queryProj;
 
     /**
      * Key 投影层
      */
-    private final Linear keyProj;
+    private Module keyProj;
 
     /**
-     * Value 投影层
+     * Value 投影层（支持 LoRA 替换）
      */
-    private final Linear valueProj;
+    private Module valueProj;
 
     /**
      * 输出投影层
      */
-    private final Linear outputProj;
+    private Module outputProj;
 
     /**
      * RoPE 位置编码
@@ -248,6 +248,51 @@ public class MultiHeadAttention extends Module {
      */
     public int getHeadDim() {
         return headDim;
+    }
+    
+    /**
+     * 获取 Query 投影层
+     */
+    public Module getQueryProj() {
+        return queryProj;
+    }
+    
+    /**
+     * 获取 Value 投影层
+     */
+    public Module getValueProj() {
+        return valueProj;
+    }
+    
+    /**
+     * 设置 Query 投影层（用于 LoRA 注入）
+     */
+    public void setQueryProj(Module queryProj) {
+        this.queryProj = queryProj;
+        // 直接替换模块（绕过 registerModule 的重复检查）
+        _modules.put("query_proj", queryProj);
+        if (queryProj != null) {
+            queryProj.setParent(this);
+        }
+    }
+    
+    /**
+     * 设置 Value 投影层（用于 LoRA 注入）
+     */
+    public void setValueProj(Module valueProj) {
+        this.valueProj = valueProj;
+        // 直接替换模块（绕过 registerModule 的重复检查）
+        _modules.put("value_proj", valueProj);
+        if (valueProj != null) {
+            valueProj.setParent(this);
+        }
+    }
+    
+    /**
+     * 获取隐藏层维度
+     */
+    public int getHiddenSize() {
+        return hiddenSize;
     }
     
     // =============================================================================

@@ -119,7 +119,14 @@ public class PretrainTrainer {
         System.out.println("开始预训练");
         System.out.println("=".repeat(60));
         System.out.println("模型配置: " + config.getModelSize());
-        System.out.println("总参数量: " + model.getAllParams().size());
+        long totalParams = 0;
+        for (var param : model.getAllParams().values()) {
+            int[] dims = param.getValue().getShape().getShapeDims();
+            long size = 1;
+            for (int d : dims) size *= d;
+            totalParams += size;
+        }
+        System.out.println("总参数量: " + totalParams + " (" + String.format("%.2fM", totalParams / 1_000_000.0) + ")");
         System.out.println("训练样本数: " + dataset.getSampleCount());
         System.out.println("批次数量: " + dataset.getBatchCount());
         System.out.println("最大轮次: " + maxEpochs);

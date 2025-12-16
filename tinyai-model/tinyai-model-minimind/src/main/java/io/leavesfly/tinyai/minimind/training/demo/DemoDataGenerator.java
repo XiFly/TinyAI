@@ -1,83 +1,27 @@
-package io.leavesfly.tinyai.minimind.training;
-
-import io.leavesfly.tinyai.func.Variable;
-import io.leavesfly.tinyai.minimind.model.MiniMindConfig;
-import io.leavesfly.tinyai.minimind.model.MiniMindModel;
-import io.leavesfly.tinyai.minimind.tokenizer.MiniMindTokenizer;
-import io.leavesfly.tinyai.minimind.training.dataset.PretrainDataset;
-import io.leavesfly.tinyai.minimind.training.dataset.SFTDataset;
-import io.leavesfly.tinyai.ml.loss.SoftmaxCrossEntropy;
-import io.leavesfly.tinyai.ml.optimize.Adam;
-import io.leavesfly.tinyai.ndarr.NdArray;
-import io.leavesfly.tinyai.ndarr.Shape;
+package io.leavesfly.tinyai.minimind.training.demo;
 
 import java.io.*;
 import java.util.*;
 
+import static io.leavesfly.tinyai.minimind.training.demo.DemoConfig.*;
+
 /**
- * MiniMind 完整训练演示
- * <p>
- * 参考 DeepSeekV3TrainDemoV2 的实现方式，提供完整的训练流程：
- * 1. 准备真实的教学数据集（适用于教育学习）
- * 2. 预训练阶段 - 无监督语言建模训练
- * 3. 微调阶段 - 监督指令微调（SFT）
- * 4. 强化学习阶段 - RLAIF训练
- * 5. 推理阶段 - 多种生成策略演示
- * <p>
- * 数据集特点：
- * - 超小规模，便于快速执行
- * - 内容清晰，适合教学演示
- * - 覆盖完整训练流程
- *
+ * MiniMind 训练演示 - 数据生成器
+ * 
+ * 负责生成各阶段训练数据：
+ * - 预训练数据（通用语言知识）
+ * - SFT数据（指令-回答对）
+ * - DPO数据（偏好对）
+ * - RL数据（带奖励样本）
+ * 
  * @author TinyAI Team
- * @version 1.0
  */
-public class MiniMindTrainDemo {
-
-    /** 共享分词器 - 使用标准 MiniMindTokenizer */
-    private static MiniMindTokenizer sharedTokenizer;
-
-    private static final String DATA_DIR = "./data/minimind_training";
-    private static final String CHECKPOINT_DIR = "./checkpoints/minimind";
-
-    public static void main(String[] args) {
-        System.out.println("=".repeat(80));
-        System.out.println("MiniMind 完整训练与推理演示");
-        System.out.println("适用于教学和学习的超小规模数据集训练方案");
-        System.out.println("=".repeat(80));
-
-        try {
-            // 步骤0: 准备数据集文件
-            prepareDatasets();
-
-            // 步骤1: 无监督预训练
-            MiniMindModel pretrainedModel = runUnsupervisedPretraining();
-
-            // 步骤2: 监督微调（SFT）
-            MiniMindModel finetunedModel = runSupervisedFinetuning(pretrainedModel);
-
-            // 步骤3: 强化学习训练（RLAIF）
-            MiniMindModel rlModel = runReinforcementLearningTraining(finetunedModel);
-
-            // 步骤4: 推理测试
-            runInference(rlModel);
-
-            System.out.println("\n" + "=".repeat(80));
-            System.out.println("✅ 完整训练流程演示成功!");
-            System.out.println("=".repeat(80));
-
-        } catch (Exception e) {
-            System.err.println("❌ 训练过程出错: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    // ========== 步骤0: 数据准备 ==========
+public class DemoDataGenerator {
 
     /**
-     * 准备训练数据集
+     * 准备所有训练数据集
      */
-    private static void prepareDatasets() throws IOException {
+    public static void prepareDatasets() throws IOException {
         System.out.println("\n" + "=".repeat(80));
         System.out.println("📦 步骤0: 准备训练数据集");
         System.out.println("=".repeat(80));
@@ -88,29 +32,24 @@ public class MiniMindTrainDemo {
             System.out.println("✓ 创建数据目录: " + DATA_DIR);
         }
 
-        // 生成预训练数据集
         generatePretrainDataset();
-
-        // 生成监督微调数据集
         generateSFTDataset();
-
-        // 生成强化学习数据集
+        generateDPODataset();
         generateRLDataset();
 
         System.out.println("\n✅ 数据集准备完成!");
     }
 
     /**
-     * 生成预训练数据集
-     * 包含通用语言知识
+     * 生成预训练数据集 - 通用语言知识
      */
-    private static void generatePretrainDataset() throws IOException {
+    public static void generatePretrainDataset() throws IOException {
         System.out.println("\n📝 生成预训练数据集...");
 
-        List<String> pretrainTexts = new ArrayList<>();
+        List<String> texts = new ArrayList<>();
 
         // 1. 深度学习基础知识 (30条)
-        pretrainTexts.addAll(Arrays.asList(
+        texts.addAll(Arrays.asList(
             "Deep learning is a subset of machine learning that uses neural networks",
             "Neural networks consist of interconnected layers of neurons",
             "Backpropagation is the algorithm used to train neural networks",
@@ -144,7 +83,7 @@ public class MiniMindTrainDemo {
         ));
 
         // 2. 自然语言处理知识 (30条)
-        pretrainTexts.addAll(Arrays.asList(
+        texts.addAll(Arrays.asList(
             "Language models predict the next word in a sequence",
             "Autoregressive models generate text one token at a time",
             "BERT uses bidirectional context for understanding",
@@ -178,7 +117,7 @@ public class MiniMindTrainDemo {
         ));
 
         // 3. 机器学习概念 (30条)
-        pretrainTexts.addAll(Arrays.asList(
+        texts.addAll(Arrays.asList(
             "Supervised learning uses labeled data for training",
             "Unsupervised learning finds patterns without labels",
             "Reinforcement learning learns through rewards and penalties",
@@ -212,7 +151,7 @@ public class MiniMindTrainDemo {
         ));
 
         // 4. AI伦理与应用 (30条)
-        pretrainTexts.addAll(Arrays.asList(
+        texts.addAll(Arrays.asList(
             "Artificial intelligence transforms many industries",
             "AI ethics ensures responsible development",
             "Fairness in AI prevents discrimination",
@@ -246,7 +185,7 @@ public class MiniMindTrainDemo {
         ));
 
         // 5. 编程与软件开发 (30条)
-        pretrainTexts.addAll(Arrays.asList(
+        texts.addAll(Arrays.asList(
             "Programming languages enable human-computer communication",
             "Python is popular for machine learning development",
             "Java offers robust object-oriented programming",
@@ -279,26 +218,21 @@ public class MiniMindTrainDemo {
             "Clean code principles enhance readability"
         ));
 
-        // 写入文件
         String filePath = DATA_DIR + "/pretrain.txt";
-        writeToFile(pretrainTexts, filePath);
-
-        System.out.println("  ✓ 预训练数据: " + pretrainTexts.size() + " 条");
+        writeToFile(texts, filePath);
+        System.out.println("  ✓ 预训练数据: " + texts.size() + " 条");
         System.out.println("  ✓ 保存路径: " + filePath);
     }
 
     /**
-     * 生成监督微调数据集
-     * 包含指令-回答对
+     * 生成监督微调数据集 - 指令-回答对
      */
-    private static void generateSFTDataset() throws IOException {
+    public static void generateSFTDataset() throws IOException {
         System.out.println("\n📝 生成监督微调数据集...");
 
-        List<String> sftTrainTexts = new ArrayList<>();
-        List<String> sftValTexts = new ArrayList<>();
+        List<String> trainTexts = new ArrayList<>();
 
-        // 训练集: 60条指令-回答对
-        sftTrainTexts.addAll(Arrays.asList(
+        trainTexts.addAll(Arrays.asList(
             "Question: What is deep learning? Answer: Deep learning is a subset of machine learning using neural networks with multiple layers",
             "Question: Explain backpropagation Answer: Backpropagation is an algorithm that computes gradients to update neural network weights",
             "Question: What is overfitting? Answer: Overfitting occurs when a model memorizes training data instead of learning general patterns",
@@ -361,34 +295,76 @@ public class MiniMindTrainDemo {
             "Instruction: Split train-test data Answer: from sklearn.model_selection import train_test_split"
         ));
 
-        // 验证集: 从训练集中抽取10条
-        for (int i = 0; i < 10 && i < sftTrainTexts.size(); i++) {
-            sftValTexts.add(sftTrainTexts.get(i));
+        // 验证集
+        List<String> valTexts = new ArrayList<>();
+        for (int i = 0; i < 10 && i < trainTexts.size(); i++) {
+            valTexts.add(trainTexts.get(i));
         }
 
-        // 写入训练集
         String trainPath = DATA_DIR + "/sft_train.txt";
-        writeToFile(sftTrainTexts, trainPath);
-        System.out.println("  ✓ SFT训练集: " + sftTrainTexts.size() + " 条");
-        System.out.println("  ✓ 保存路径: " + trainPath);
+        writeToFile(trainTexts, trainPath);
+        System.out.println("  ✓ SFT训练集: " + trainTexts.size() + " 条");
 
-        // 写入验证集
         String valPath = DATA_DIR + "/sft_val.txt";
-        writeToFile(sftValTexts, valPath);
-        System.out.println("  ✓ SFT验证集: " + sftValTexts.size() + " 条");
-        System.out.println("  ✓ 保存路径: " + valPath);
+        writeToFile(valTexts, valPath);
+        System.out.println("  ✓ SFT验证集: " + valTexts.size() + " 条");
     }
 
     /**
-     * 生成强化学习数据集
-     * 包含带奖励的样本
+     * 生成DPO偏好数据集 - 偏好对 (prompt, chosen, rejected)
      */
-    private static void generateRLDataset() throws IOException {
+    public static void generateDPODataset() throws IOException {
+        System.out.println("\n📝 生成DPO偏好数据集...");
+
+        List<String> dpoTexts = new ArrayList<>();
+
+        // 格式: prompt|||chosen|||rejected
+        dpoTexts.addAll(Arrays.asList(
+            "Question: What is deep learning?|||Deep learning is a subset of machine learning that uses neural networks with multiple layers to learn hierarchical representations of data.|||Deep learning uses neural networks.",
+            "Question: Explain backpropagation|||Backpropagation is the algorithm that computes gradients by applying the chain rule backwards through the network, enabling efficient weight updates.|||It updates weights.",
+            "Question: What is overfitting?|||Overfitting occurs when a model learns training data too well including noise, resulting in poor generalization. Solutions include regularization and dropout.|||Model memorizes data.",
+            "Question: Define gradient descent|||Gradient descent is an iterative optimization algorithm that minimizes loss by computing gradients and updating parameters in the opposite direction.|||It minimizes loss.",
+            "Question: What are transformers?|||Transformers are neural network architectures that use self-attention mechanisms to process sequences in parallel, enabling efficient handling of long-range dependencies.|||Attention based models.",
+            "Instruction: Write a Python function|||def add_numbers(a, b): return a + b  # Clear function with descriptive name|||add stuff",
+            "Instruction: Handle exceptions|||try: risky_operation() except ValueError as e: log_error(e); return default_value|||use try except",
+            "Instruction: Create a class|||class User: def __init__(self, name, email): self.name = name; self.email = email|||class User pass",
+            "Instruction: Sort a list|||sorted_list = sorted(data, key=lambda x: x.priority, reverse=True)|||data.sort()",
+            "Instruction: Read a file|||with open('file.txt', 'r', encoding='utf-8') as f: content = f.read()|||open and read",
+            "Question: What is attention mechanism?|||Attention allows models to dynamically focus on relevant parts of input by computing weighted sums based on query-key similarity.|||It helps models focus.",
+            "Question: Explain BERT|||BERT uses bidirectional transformers with masked language modeling pre-training to capture deep contextual representations.|||BERT is a language model.",
+            "Question: What is GPT?|||GPT is an autoregressive transformer language model that predicts next tokens based on previous context, excelling at text generation.|||GPT generates text.",
+            "Question: Define transfer learning|||Transfer learning reuses knowledge from pre-trained models on large datasets to improve performance on related tasks with limited data.|||Use old models.",
+            "Question: What is fine-tuning?|||Fine-tuning adapts pre-trained model parameters to specific downstream tasks through continued training with lower learning rates.|||Train model more.",
+            "Task: Improve code quality|||Follow coding standards, write unit tests, use meaningful names, add documentation, conduct code reviews, and refactor regularly.|||Write better code.",
+            "Task: Optimize performance|||Profile to identify bottlenecks, use efficient algorithms, minimize memory allocations, leverage caching, and parallelize where possible.|||Make it faster.",
+            "Task: Debug efficiently|||Use debuggers, add logging, write test cases, isolate the problem, check recent changes, and verify assumptions systematically.|||Find and fix bugs.",
+            "Task: Write documentation|||Include API reference, usage examples, installation guide, architecture overview, and maintain changelog with version history.|||Write docs.",
+            "Task: Handle errors|||Implement proper exception handling, provide informative error messages, log errors with context, and fail gracefully.|||Catch errors.",
+            "Question: How to prevent overfitting?|||Use regularization techniques like L1/L2, dropout layers, early stopping, data augmentation, and cross-validation.|||Use less data.",
+            "Question: Explain cross-validation|||Cross-validation partitions data into k folds, trains on k-1 folds, validates on remaining fold, and averages results.|||Split data multiple times.",
+            "Question: What is regularization?|||Regularization adds penalty terms to loss function to constrain model complexity, preventing overfitting.|||Makes model simpler.",
+            "Question: Define learning rate|||Learning rate controls step size in gradient descent, balancing convergence speed against stability.|||How fast model learns.",
+            "Question: What is batch normalization?|||Batch normalization normalizes layer inputs using batch statistics, stabilizing training and enabling higher learning rates.|||Normalize batches.",
+            "Instruction: Design API|||Define clear endpoints, use proper HTTP methods, implement versioning, validate inputs, return consistent responses.|||Make endpoints.",
+            "Instruction: Write tests|||Create unit tests for individual functions, integration tests for components, use mocking for dependencies.|||Test the code.",
+            "Instruction: Use version control|||Commit frequently with meaningful messages, use branches for features, review changes before merging.|||Use git.",
+            "Instruction: Code review|||Check for correctness, readability, performance issues, security vulnerabilities, test coverage, and adherence to standards.|||Look at code.",
+            "Instruction: Refactor code|||Extract methods for reuse, eliminate duplication, simplify complex logic, improve naming, and maintain test coverage.|||Clean up code."
+        ));
+
+        String filePath = DATA_DIR + "/dpo_train.txt";
+        writeToFile(dpoTexts, filePath);
+        System.out.println("  ✓ DPO偏好对: " + dpoTexts.size() + " 条");
+    }
+
+    /**
+     * 生成强化学习数据集 - 带奖励样本
+     */
+    public static void generateRLDataset() throws IOException {
         System.out.println("\n📝 生成强化学习数据集...");
 
         List<String> rlTexts = new ArrayList<>();
 
-        // 40条带奖励标签的样本
         rlTexts.addAll(Arrays.asList(
             "[REWARD:1.0] Question: What is machine learning? Answer: Machine learning enables computers to learn from data without explicit programming",
             "[REWARD:0.9] Question: Explain neural networks Answer: Neural networks are computing systems inspired by biological brains",
@@ -432,399 +408,8 @@ public class MiniMindTrainDemo {
             "[REWARD:0.9] Task: Maintain code quality Answer: Refactor regularly and eliminate technical debt"
         ));
 
-        // 写入文件
         String filePath = DATA_DIR + "/rl_train.txt";
         writeToFile(rlTexts, filePath);
-
         System.out.println("  ✓ RL训练数据: " + rlTexts.size() + " 条");
-        System.out.println("  ✓ 保存路径: " + filePath);
-    }
-
-    // ========== 步骤1: 无监督预训练 ==========
-
-    /**
-     * 执行无监督预训练 - 使用标准 PretrainTrainer
-     */
-    private static MiniMindModel runUnsupervisedPretraining() throws IOException {
-        System.out.println("\n" + "=".repeat(80));
-        System.out.println("📚 步骤1: MiniMind 无监督预训练 (Unsupervised Pretraining)");
-        System.out.println("=".repeat(80));
-
-        // 1. 创建字符级分词器（用于教学演示）
-        System.out.println("\n📝 创建分词器...");
-        int vocabSize = 1024;  // 足够覆盖教学数据集
-        int maxSeqLen = 64;    // 序列长度要足够容纳训练样本
-        sharedTokenizer = MiniMindTokenizer.createCharLevelTokenizer(vocabSize, maxSeqLen);
-        System.out.println("  ✓ 分词器类型: 字符级 (Char-Level)");
-        System.out.println("  ✓ 词汇表大小: " + sharedTokenizer.getVocabulary().getVocabSize());
-
-        // 2. 创建MiniMind模型（超小配置）
-        System.out.println("\n📝 创建MiniMind模型...");
-        MiniMindConfig config = createMicroConfig(sharedTokenizer.getVocabulary().getVocabSize());
-        MiniMindModel model = new MiniMindModel("minimind-pretrain", config);
-
-        System.out.println("  ✓ 模型配置: Micro (教学专用)");
-        System.out.println("  ✓ 词汇表大小: " + config.getVocabSize());
-        System.out.println("  ✓ 隐藏维度: " + config.getHiddenSize());
-        System.out.println("  ✓ 层数: " + config.getNumLayers());
-        System.out.println("  ✓ 注意力头数: " + config.getNumHeads());
-        System.out.println("  ✓ 最大序列长度: " + config.getMaxSeqLen());
-
-        // 3. 使用标准 PretrainDataset 加载数据
-        System.out.println("\n📝 准备预训练数据集...");
-        String pretrainPath = DATA_DIR + "/pretrain.txt";
-        List<String> pretrainTexts = readFromFile(pretrainPath);
-        
-        int batchSize = 2;  // 小批次便于教学
-        PretrainDataset dataset = new PretrainDataset(sharedTokenizer, maxSeqLen, batchSize);
-        dataset.loadFromTexts(pretrainTexts);
-        dataset.prepare(true);
-        System.out.println("  ✓ 预训练样本数: " + dataset.getSampleCount());
-        System.out.println("  ✓ 批次数量: " + dataset.getBatchCount());
-
-        // 4. 使用标准 PretrainTrainer 进行训练
-        System.out.println("\n📝 开始无监督预训练...");
-        System.out.println("  - 训练目标: 因果语言建模 (下一个词预测)");
-        System.out.println("  - 学习率: 1e-2");
-        System.out.println("  - 训练轮次: 3 epochs");
-        System.out.println("-".repeat(80));
-
-        PretrainTrainer trainer = new PretrainTrainer(model, dataset);
-        trainer.configure(3, 1e-2f, 0, 1.0f);  // 3 epochs, lr=1e-2, no warmup
-        trainer.setLogInterval(10);  // 每10步打印一次
-        trainer.train();
-
-        System.out.println("-".repeat(80));
-        System.out.println("\n✅ 无监督预训练完成!");
-        System.out.println("\n💡 预训练阶段总结:");
-        System.out.println("  - 目标: 学习语言的通用表示和语法");
-        System.out.println("  - 任务: 因果语言建模（预测下一个词）");
-        System.out.println("  - 数据: 大规模无标注文本");
-        System.out.println("  - 技巧: 较高学习率 + 多轮训练");
-
-        return model;
-    }
-
-    // ========== 步骤2: 监督微调 ==========
-
-    /**
-     * 执行监督微调（SFT）- 使用标准 SFTTrainer
-     */
-    private static MiniMindModel runSupervisedFinetuning(MiniMindModel pretrainedModel) throws IOException {
-        System.out.println("\n" + "=".repeat(80));
-        System.out.println("🎯 步骤2: MiniMind 监督微调 (Supervised Fine-tuning)");
-        System.out.println("=".repeat(80));
-
-        // 1. 加载SFT数据
-        System.out.println("\n📝 加载监督微调数据...");
-        String trainPath = DATA_DIR + "/sft_train.txt";
-        List<String> trainTexts = readFromFile(trainPath);
-        System.out.println("  ✓ 训练集: " + trainTexts.size() + " 条");
-
-        // 2. 使用标准 SFTDataset
-        System.out.println("\n📝 准备监督微调数据集...");
-        MiniMindConfig config = pretrainedModel.getConfig();
-        int batchSize = 2;
-        
-        SFTDataset dataset = new SFTDataset(sharedTokenizer, config.getMaxSeqLen(), batchSize);
-        // 将纯文本转换为指令格式
-        for (String text : trainTexts) {
-            dataset.addSample(text, "", text);  // 简化：指令=输出
-        }
-        dataset.prepare(true);
-        System.out.println("  ✓ 训练样本数: " + dataset.getSampleCount());
-        System.out.println("  ✓ 批次数量: " + dataset.getBatchCount());
-
-        // 3. 使用标准 SFTTrainer
-        System.out.println("\n📝 开始监督微调训练...");
-        System.out.println("  - 训练目标: 指令跟随和对话生成");
-        System.out.println("  - 学习率: 1e-3 (比预训练低10倍)");
-        System.out.println("  - 训练轮次: 3 epochs");
-        System.out.println("-".repeat(80));
-
-        SFTTrainer trainer = new SFTTrainer(pretrainedModel, dataset);
-        trainer.configure(3, 1e-3f, 1.0f);  // 3 epochs, lr=1e-3
-        trainer.train();
-
-        System.out.println("-".repeat(80));
-        System.out.println("\n✅ 监督微调完成!");
-        System.out.println("\n💡 SFT阶段总结:");
-        System.out.println("  - 目标: 学习遵循指令和生成高质量回答");
-        System.out.println("  - 任务: 指令微调（问答对）");
-        System.out.println("  - 数据: 带标签的指令-回答数据");
-        System.out.println("  - 技巧: 小学习率 + 早停防止过拟合");
-
-        return pretrainedModel;
-    }
-
-    // ========== 步骤3: 强化学习训练 ==========
-
-    /**
-     * 执行强化学习训练（RLAIF）- 使用简化的奖励加权策略梯度
-     * 
-     * 核心思想：将奖励作为损失的权重，高奖励样本获得更大的梯度贡献
-     * Loss = -reward * log P(y|x)
-     */
-    private static MiniMindModel runReinforcementLearningTraining(MiniMindModel finetunedModel) throws IOException {
-        System.out.println("\n" + "=".repeat(80));
-        System.out.println("🏆 步骤3: MiniMind 强化学习训练 (Reinforcement Learning)");
-        System.out.println("=".repeat(80));
-        System.out.println("💡 使用奖励加权的策略梯度方法优化模型");
-
-        // 1. 加载RL数据
-        System.out.println("\n📝 加载强化学习训练数据...");
-        String rlPath = DATA_DIR + "/rl_train.txt";
-        List<String> rlTexts = readFromFile(rlPath);
-        System.out.println("  ✓ RL训练数据: " + rlTexts.size() + " 条");
-
-        // 2. 解析数据并提取奖励
-        System.out.println("\n📝 准备强化学习数据集...");
-        List<String> texts = new ArrayList<>();
-        List<Float> rewards = new ArrayList<>();
-        
-        for (String line : rlTexts) {
-            float reward = extractReward(line);
-            String cleanText = removeRewardLabel(line);
-            texts.add(cleanText);
-            rewards.add(reward);
-        }
-        
-        float avgReward = (float) rewards.stream().mapToDouble(Float::doubleValue).average().orElse(0.0);
-        System.out.println("  ✓ RL样本数: " + texts.size());
-        System.out.println("  ✓ 平均奖励: " + String.format("%.2f", avgReward));
-
-        // 3. 配置训练
-        MiniMindConfig config = finetunedModel.getConfig();
-        float learningRate = 5e-4f;
-        int epochs = 2;
-        int logInterval = 10;
-        
-        System.out.println("\n📝 开始强化学习训练...");
-        System.out.println("  - 训练目标: 最大化奖励加权的对数概率");
-        System.out.println("  - 算法: 奖励加权策略梯度 (Reward-Weighted Policy Gradient)");
-        System.out.println("  - 学习率: " + learningRate);
-        System.out.println("  - 训练轮次: " + epochs);
-        System.out.println("-".repeat(80));
-
-        // 4. 创建优化器和损失函数
-        Adam optimizer = new Adam(finetunedModel, learningRate, 0.9f, 0.999f, 1e-8f);
-        SoftmaxCrossEntropy lossFunction = new SoftmaxCrossEntropy();
-        finetunedModel.setTraining(true);
-        
-        int step = 0;
-        int maxSeqLen = config.getMaxSeqLen();
-        
-        // 5. 训练循环
-        for (int epoch = 0; epoch < epochs; epoch++) {
-            float epochLoss = 0.0f;
-            int sampleCount = 0;
-            
-            for (int i = 0; i < texts.size(); i++) {
-                String text = texts.get(i);
-                float reward = rewards.get(i);
-                
-                // 编码文本
-                List<Integer> tokenIds = sharedTokenizer.encode(text, true, true);
-                if (tokenIds.size() < 2) continue;
-                
-                // 准备输入和目标
-                int seqLen = Math.min(tokenIds.size() - 1, maxSeqLen - 1);
-                float[] inputData = new float[seqLen];
-                float[] targetData = new float[seqLen];
-                
-                for (int j = 0; j < seqLen; j++) {
-                    inputData[j] = tokenIds.get(j);
-                    targetData[j] = tokenIds.get(j + 1);
-                }
-                
-                Variable input = new Variable(NdArray.of(inputData, Shape.of(1, seqLen)));
-                Variable target = new Variable(NdArray.of(targetData, Shape.of(1, seqLen)));
-                
-                // 前向传播
-                Variable logits = finetunedModel.predict(input);
-                
-                // 计算损失 (reshape为2D)
-                int[] logitsShape = logits.getValue().getShape().getShapeDims();
-                int totalTokens = logitsShape[0] * logitsShape[1];
-                int vocabSize = logitsShape[2];
-                
-                Variable logitsReshaped = logits.reshape(Shape.of(totalTokens, vocabSize));
-                Variable targetReshaped = target.reshape(Shape.of(totalTokens, 1));
-                
-                Variable loss = lossFunction.loss(targetReshaped, logitsReshaped);
-                
-                // 奖励加权：高奖励样本获得更大权重
-                Variable weightedLoss = loss.mul(new Variable(NdArray.of(reward)));
-                
-                // 反向传播
-                finetunedModel.clearGrads();
-                weightedLoss.backward();
-                optimizer.update();
-                weightedLoss.unChainBackward();
-                
-                float lossValue = loss.getValue().getNumber().floatValue();
-                epochLoss += lossValue * reward;
-                sampleCount++;
-                step++;
-                
-                if (step % logInterval == 0) {
-                    System.out.printf("Epoch %d | Step %d | Loss: %.4f | Reward: %.2f%n",
-                        epoch + 1, step, lossValue, reward);
-                }
-            }
-            
-            float avgLoss = sampleCount > 0 ? epochLoss / sampleCount : 0.0f;
-            System.out.printf("Epoch %d 完成 | 平均加权损失: %.4f%n", epoch + 1, avgLoss);
-        }
-
-        System.out.println("-".repeat(80));
-        System.out.println("\n✅ 强化学习训练完成!");
-        System.out.println("\n💡 RL阶段总结:");
-        System.out.println("  - 目标: 通过奖励信号对齐模型行为");
-        System.out.println("  - 方法: 奖励加权的交叉熵损失");
-        System.out.println("  - 效果: 高奖励样本获得更大梯度贡献");
-        System.out.println("  - 技巧: 小学习率 + 奖励引导");
-
-        return finetunedModel;
-    }
-
-    // ========== 步骤4: 推理测试 ==========
-
-    /**
-     * 执行推理测试
-     */
-    private static void runInference(MiniMindModel model) {
-        System.out.println("\n" + "=".repeat(80));
-        System.out.println("🚀 步骤4: MiniMind 推理测试");
-        System.out.println("=".repeat(80));
-
-        // 设置为推理模式
-        model.setTraining(false);
-
-        // 测试用例
-        List<String> testPrompts = Arrays.asList(
-            "Question: What is machine learning?",
-            "Instruction: Write a Python function",
-            "Task: Explain neural networks",
-            "Question: Define deep learning"
-        );
-
-        System.out.println("\n📝 测试不同生成策略...\n");
-
-        for (String prompt : testPrompts) {
-            System.out.println("提示词: " + prompt);
-
-            try {
-                // 编码提示词
-                List<Integer> promptTokens = sharedTokenizer.encode(prompt);
-                int[] promptIds = promptTokens.stream().mapToInt(Integer::intValue).toArray();
-
-                // Greedy解码
-                int[] greedyResult = model.generate(
-                    promptIds,
-                    20,      // maxNewTokens
-                    0.0f,    // temperature (greedy)
-                    0,       // topK
-                    0.0f     // topP
-                );
-
-                String greedyText = sharedTokenizer.decode(intArrayToList(greedyResult));
-                System.out.println("  [Greedy] → " + greedyText);
-
-            } catch (Exception e) {
-                System.out.println("  ⚠ 生成失败: " + e.getMessage());
-            }
-
-            System.out.println();
-        }
-
-        System.out.println("✅ 推理测试完成!");
-        System.out.println("\n💡 推理阶段总结:");
-        System.out.println("  - 输入: 提示词文本");
-        System.out.println("  - 处理: 自回归生成");
-        System.out.println("  - 输出: 生成的完整文本");
-        System.out.println("  - 策略: Greedy/Temperature/Top-K/Top-P");
-    }
-
-    // ========== 辅助方法 ==========
-
-    /**
-     * 创建超小型配置（用于快速演示）
-     */
-    private static MiniMindConfig createMicroConfig(int vocabSize) {
-        MiniMindConfig config = new MiniMindConfig();
-        config.setVocabSize(vocabSize);
-        config.setMaxSeqLen(64);          // 序列长度
-        config.setHiddenSize(128);        // 隐藏维度
-        config.setNumLayers(2);           // 层数
-        config.setNumHeads(4);            // 注意力头数
-        config.setFfnHiddenSize(256);     // FFN隐藏维度
-        config.setDropout(0.1f);
-        config.setEpsilon(1e-5f);
-        return config;
-    }
-
-    /**
-     * int[] 转 List<Integer> 辅助方法
-     */
-    private static List<Integer> intArrayToList(int[] array) {
-        List<Integer> list = new ArrayList<>();
-        for (int value : array) {
-            list.add(value);
-        }
-        return list;
-    }
-
-    /**
-     * 提取奖励值
-     */
-    private static float extractReward(String text) {
-        if (text.startsWith("[REWARD:")) {
-            int endIdx = text.indexOf("]");
-            if (endIdx > 0) {
-                String rewardStr = text.substring(8, endIdx);
-                try {
-                    return Float.parseFloat(rewardStr);
-                } catch (NumberFormatException e) {
-                    return 0.5f;
-                }
-            }
-        }
-        return 0.5f;
-    }
-
-    /**
-     * 移除奖励标签
-     */
-    private static String removeRewardLabel(String text) {
-        return text.replaceFirst("^\\[REWARD:[0-9.]+\\]\\s*", "");
-    }
-
-    /**
-     * 从文件读取文本
-     */
-    private static List<String> readFromFile(String filePath) throws IOException {
-        List<String> lines = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!line.trim().isEmpty()) {
-                    lines.add(line);
-                }
-            }
-        }
-        return lines;
-    }
-
-    /**
-     * 写入文件
-     */
-    private static void writeToFile(List<String> lines, String filePath) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            for (String line : lines) {
-                writer.write(line);
-                writer.newLine();
-            }
-        }
     }
 }
