@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * DPO (Direct Preference Optimization) 数据集
+ *  数据集
  * 
  * DPO数据格式: (prompt, chosen_response, rejected_response)
  * - prompt: 输入提示

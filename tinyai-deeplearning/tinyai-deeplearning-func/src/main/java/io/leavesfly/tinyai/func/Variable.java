@@ -13,10 +13,7 @@ import io.leavesfly.tinyai.ndarr.NdArray;
 import io.leavesfly.tinyai.ndarr.Shape;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * 数学中的变量的抽象表示
@@ -237,7 +234,7 @@ public class Variable implements Serializable {
     }
 
     // 访问标记，防止重复处理
-    private static java.util.Set<Variable> visitedInBackward = new java.util.HashSet<>();
+    private static Set<Variable> visitedInBackward = new HashSet<>();
     
     /**
      * 重置反向传播访问标记
@@ -288,9 +285,11 @@ public class Variable implements Serializable {
             List<NdArray> grads = _creator.isMultiOutput()
                     ? buildOutputGradsForMulti(_creator, this)
                     : _creator.backward(grad);
+
             if (_inputs.length != grads.size()) {
                 throw new RuntimeException("Variable backward grads size error!");
             }
+
             int index = 0;
             for (Variable input : _inputs) {
                 NdArray inputGrad = grads.get(index);
@@ -1389,21 +1388,8 @@ public class Variable implements Serializable {
      * @return 选择结果（维度会减少1）
      */
     public Variable select(int dim, int index) {
-        // 这里需要实现单索引选择，暂时使用 indexSelect 的简化版本
-        // 对于完整实现，需要添加对应的 Function
-        if (dim < 0) {
-            dim = ndim() + dim;
-        }
-        
-        // 简单实现：使用 getItem 模拟
-        if (dim == 0 && isMatrix()) {
-            return getItem(new int[]{index}, null);
-        } else if (dim == 1 && isMatrix()) {
-            return getItem(null, new int[]{index});
-        }
-        
-        throw new UnsupportedOperationException(
-                "select operation currently only supports 2D tensors on dim 0 or 1");
+        Function function = new io.leavesfly.tinyai.func.matrix.Select(dim, index);
+        return function.call(this);
     }
 
     /**
@@ -1417,47 +1403,22 @@ public class Variable implements Serializable {
      * @return 切片结果
      */
     public Variable sliceRange(int dim, int start, int end) {
-        if (dim < 0) {
-            dim = ndim() + dim;
-        }
-        
-        int size = this.size(dim);
-        if (end < 0) {
-            end = size + end + 1;
-        }
-        if (start < 0) {
-            start = size + start;
-        }
-        
-        int length = end - start;
-        int[] indices = new int[length];
-        for (int i = 0; i < length; i++) {
-            indices[i] = start + i;
-        }
-        
-        if (dim == 0 && isMatrix()) {
-            return getItem(indices, null);
-        } else if (dim == 1 && isMatrix()) {
-            return getItem(null, indices);
-        }
-        
-        throw new UnsupportedOperationException(
-                "sliceRange operation currently only supports 2D tensors on dim 0 or 1");
+        Function function = new io.leavesfly.tinyai.func.matrix.SliceRange(dim, start, end);
+        return function.call(this);
     }
 
     /**
-     * 创建同设备同类型的常量张量
+     * 创建指定形状和值的常量张量
      * <p>
-     * 类似 PyTorch 的 torch.full_like
+     * 类似 PyTorch 的 torch.full
      *
+     * @param shape 张量形状
      * @param value 常量值
      * @return 常量张量
      */
     public static Variable full(Shape shape, float value) {
-        NdArray array = NdArray.like(shape, value);
-        Variable result = new Variable(array);
-        result.setRequireGrad(false);
-        return result;
+        Function function = new io.leavesfly.tinyai.func.matrix.Full(shape, value);
+        return function.call();
     }
 
     /**
@@ -1494,7 +1455,7 @@ public class Variable implements Serializable {
      * @return 拼接结果
      */
     public static Variable cat(Variable[] variables, int dim) {
-        Function function = new io.leavesfly.tinyai.func.matrix.Concat(dim);
+        Function function = new Concat(dim);
         return function.call(variables);
     }
 
@@ -1508,21 +1469,8 @@ public class Variable implements Serializable {
      * @return 分割结果数组
      */
     public Variable[] split(int splitSize, int dim) {
-        if (dim < 0) {
-            dim = ndim() + dim;
-        }
-        
-        int dimSize = size(dim);
-        int numSplits = (dimSize + splitSize - 1) / splitSize;  // 向上取整
-        Variable[] results = new Variable[numSplits];
-        
-        for (int i = 0; i < numSplits; i++) {
-            int start = i * splitSize;
-            int end = Math.min(start + splitSize, dimSize);
-            results[i] = sliceRange(dim, start, end);
-        }
-        
-        return results;
+        Function function = new io.leavesfly.tinyai.func.matrix.SplitBySize(splitSize, dim);
+        return function.callMulti(this);
     }
 
     // =============================================================================
@@ -1626,7 +1574,7 @@ public class Variable implements Serializable {
      * @return 卷积运算结果的新变量
      */
     public Variable conv2d(Variable kernel, int stride, int padding) {
-        Function function = new io.leavesfly.tinyai.func.matrix.Conv2d(stride, padding);
+        Function function = new Conv2d(stride, padding);
         return function.call(this, kernel);
     }
 
