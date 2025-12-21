@@ -26,6 +26,7 @@
         <module>tinyai-model/tinyai-model-gpt</module>
         <module>tinyai-model/tinyai-model-qwen</module>
         <module>tinyai-model/tinyai-model-minimind</module>
+        <module>tinyai-model/tinyai-model-banana</module>
 
         <!--        智能体-->
         <module>tinyai-agent/tinyai-agent-context</module>
