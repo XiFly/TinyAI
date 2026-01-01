@@ -204,7 +204,7 @@ public class MCPServerTest {
     
     @Test
     public void testGetServerInfo() {
-        server.registerResource(new Resource("test://r1", "R1", ResourceType.FILE));
+        server.registerResource(new Resource("test://rx", "R1", ResourceType.FILE));
         server.registerTool(new Tool("t1", "T1", ToolCategory.CUSTOM, new HashMap<>(), args -> "ok"));
         server.registerPrompt(new Prompt("p1", "P1", "template"));
         

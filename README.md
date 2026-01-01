@@ -339,18 +339,18 @@ model.save("model.bin");
 
 ```java
 import io.leavesfly.tinyai.gpt2.GPT2Model;
-import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Model;
+import io.leavesfly.tinyai.deepseek.rx.DeepSeekR1Model;
 
 // GPT-2 文本生成
-GPT2Model gpt2 = GPT2Model.createSmallModel("gpt2-small");
-List<Integer> tokens = Arrays.asList(100, 200, 300);
-List<Integer> generated = gpt2.generateText(tokens, 50);
+GPT2Model gpt2=GPT2Model.createSmallModel("gpt2-small");
+        List<Integer> tokens=Arrays.asList(100,200,300);
+        List<Integer> generated=gpt2.generateText(tokens,50);
 
 // DeepSeek R1 推理
-DeepSeekR1Model r1 = new DeepSeekR1Model("deepseek-r1");
-DeepSeekR1Model.ReasoningResult result = r1.performReasoning(inputIds);
-System.out.println("推理步骤: " + result.numSteps);
-System.out.println("置信度: " + result.averageConfidence);
+        DeepSeekR1Model r1=new DeepSeekR1Model("deepseek-r1");
+        DeepSeekR1Model.ReasoningResult result=r1.performReasoning(inputIds);
+        System.out.println("推理步骤: "+result.numSteps);
+        System.out.println("置信度: "+result.averageConfidence);
 ```
 
 #### 示例 4: 具身智能
@@ -415,7 +415,7 @@ mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.gpt2.GPT2Demo" \
   -pl tinyai-model/tinyai-model-gpt
 
 # DeepSeek R1 推理模型
-mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Demo" \
+mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.deepseek.rx.DeepSeekR1Demo" \
   -pl tinyai-model/tinyai-model-deepseek
 
 # MiniMind 轻量级LLM

@@ -101,25 +101,25 @@ Variable codeOutput = standardModel.forward(new Variable(codePrompt));
 ### 2. DeepSeek-R1 基本使用
 
 ```java
-import io.leavesfly.tinyai.deepseek.r1.*;
+
 
 // 1. 创建不同规模的R1模型
-DeepSeekR1Model tinyModel = DeepSeekR1Model.createTinyModel("r1-tiny");      // 快速测试
-DeepSeekR1Model standardModel = DeepSeekR1Model.createStandardModel("r1-std"); // 标准配置
-DeepSeekR1Model largeModel = DeepSeekR1Model.createLargeModel("r1-large");   // 大型模型
+DeepSeekR1Model tinyModel=DeepSeekR1Model.createTinyModel("r1-tiny");      // 快速测试
+        DeepSeekR1Model standardModel=DeepSeekR1Model.createStandardModel("r1-std"); // 标准配置
+        DeepSeekR1Model largeModel=DeepSeekR1Model.createLargeModel("r1-large");   // 大型模型
 
 // 2. 打印模型信息
-standardModel.printModelInfo();
+        standardModel.printModelInfo();
 
 // 3. 基础推理
-NdArray tokenIds = NdArray.of(new int[][]{{1, 15, 23, 42}});
-Variable input = new Variable(tokenIds);
-Variable output = standardModel.forward(input);
+        NdArray tokenIds=NdArray.of(new int[][]{{1,15,23,42}});
+        Variable input=new Variable(tokenIds);
+        Variable output=standardModel.forward(input);
 
 // 4. 带反思的推理
-DeepSeekR1Block.ReasoningOutput reasoningOutput = standardModel.forwardWithReasoning(input);
-System.out.println("推理质量: " + reasoningOutput.getQualityScore());
-System.out.println("需要改进: " + reasoningOutput.needsRefinement());
+        DeepSeekR1Block.ReasoningOutput reasoningOutput=standardModel.forwardWithReasoning(input);
+        System.out.println("推理质量: "+reasoningOutput.getQualityScore());
+        System.out.println("需要改进: "+reasoningOutput.needsRefinement());
 ```
 
 ### 3. 自定义配置
@@ -283,12 +283,12 @@ for (int expertIdx = 0; expertIdx < numExperts; expertIdx++) {
 
 运行演示程序查看完整功能：
 - [DeepSeekV3Demo.java](src/main/java/io/leavesfly/tinyai/deepseek/v3/DeepSeekV3Demo.java)
-- [DeepSeekR1Demo.java](src/main/java/io/leavesfly/tinyai/deepseek/r1/DeepSeekR1Demo.java)
+- [DeepSeekR1Demo.java](src/main/java/io/leavesfly/tinyai/deepseek/rx/DeepSeekR1Demo.java)
 
 ## 📚 详细文档
 
 - [DeepSeek-V3 详细实现说明](src/main/java/io/leavesfly/tinyai/deepseek/v3/README.md)
-- [DeepSeek-R1 详细实现说明](src/main/java/io/leavesfly/tinyai/deepseek/r1/README.md)
+- [DeepSeek-R1 详细实现说明](src/main/java/io/leavesfly/tinyai/deepseek/rx/README.md)
 
 ## 🔧 高级特性
 

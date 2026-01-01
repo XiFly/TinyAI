@@ -125,22 +125,22 @@ NdArray output = model.generateSequence(inputTokens, 20);
 #### 2. DeepSeek R1 推理模型
 
 ```java
-import io.leavesfly.tinyai.deepseek.r1.*;
+import io.leavesfly.tinyai.deepseek.rx.*;
 
 // 创建R1模型
-DeepSeekR1Model r1Model = new DeepSeekR1Model("DeepSeek-R1");
+DeepSeekR1Model r1Model=new DeepSeekR1Model("DeepSeek-R1");
 
 // 推理任务
-NdArray inputIds = createInput();
-DeepSeekR1Model.ReasoningResult result = r1Model.performReasoning(inputIds);
+        NdArray inputIds=createInput();
+        DeepSeekR1Model.ReasoningResult result=r1Model.performReasoning(inputIds);
 
-System.out.println("推理步骤数: " + result.numSteps);
-System.out.println("置信度: " + result.averageConfidence);
-System.out.println("推理质量: " + result.reasoningQuality);
+        System.out.println("推理步骤数: "+result.numSteps);
+        System.out.println("置信度: "+result.averageConfidence);
+        System.out.println("推理质量: "+result.reasoningQuality);
 
 // 反思机制
-DeepSeekR1Model.ReflectionResult reflection = r1Model.performReflection(inputIds);
-System.out.println("反思质量: " + reflection.quality);
+        DeepSeekR1Model.ReflectionResult reflection=r1Model.performReflection(inputIds);
+        System.out.println("反思质量: "+reflection.quality);
 ```
 
 #### 3. DeepSeek V3 代码生成
@@ -288,7 +288,7 @@ NdArray output = qwenModel.generate(inputIds, maxLength);
 mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.gpt2.GPT2Demo" -pl tinyai-model-gpt
 
 # DeepSeek R1演示
-mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Demo" -pl tinyai-model-deepseek
+mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.deepseek.rx.DeepSeekR1Demo" -pl tinyai-model-deepseek
 
 # DeepSeek V3演示
 mvn exec:java -Dexec.mainClass="io.leavesfly.tinyai.deepseek.v3.DeepSeekV3Demo" -pl tinyai-model-deepseek

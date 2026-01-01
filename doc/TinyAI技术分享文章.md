@@ -1286,7 +1286,7 @@ public class BadModelDesign {
         SequentialBlock model = new SequentialBlock("model");
         model.addLayer(new LinearLayer("l1", 784, 512))
              .addLayer(new BatchNormalizationLayer("b1", 512))
-             .addLayer(new ReluLayer("r1"))
+             .addLayer(new ReluLayer("rx"))
              .addLayer(new DropoutLayer("d1", 0.3f))
              .addLayer(new LinearLayer("l2", 512, 256))
              .addLayer(new ReluLayer("r2"))
