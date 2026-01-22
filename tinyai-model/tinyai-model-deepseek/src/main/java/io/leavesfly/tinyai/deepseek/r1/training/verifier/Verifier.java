@@ -1,4 +1,4 @@
-package io.leavesfly.tinyai.deepseek.rx.training.verifier;
+package io.leavesfly.tinyai.deepseek.r1.training.verifier;
 
 /**
  * 验证器接口

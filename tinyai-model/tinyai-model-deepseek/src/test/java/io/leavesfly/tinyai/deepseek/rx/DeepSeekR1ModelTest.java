@@ -1,5 +1,8 @@
 package io.leavesfly.tinyai.deepseek.rx;
 
+import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Block;
+import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Config;
+import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Model;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ndarr.NdArray;
 import org.junit.jupiter.api.Test;
@@ -121,7 +124,7 @@ public class DeepSeekR1ModelTest {
         float[][] inputData = {{1, 2, 3, 4, 5}};
         Variable input = new Variable(NdArray.of(inputData));
         
-        DeepSeekR1Block.DetailedForwardResult result = 
+        DeepSeekR1Block.DetailedForwardResult result =
             model.predictWithDetails(input);
         
         assertNotNull(result, "详细结果应存在");

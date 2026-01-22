@@ -1,4 +1,4 @@
-package io.leavesfly.tinyai.deepseek.rx.training.verifier;
+package io.leavesfly.tinyai.deepseek.r1.training.verifier;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

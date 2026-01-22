@@ -1,4 +1,4 @@
-package io.leavesfly.tinyai.deepseek.rx;
+package io.leavesfly.tinyai.deepseek.r1;
 
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ml.model.Model;

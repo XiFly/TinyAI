@@ -1,5 +1,6 @@
 package io.leavesfly.tinyai.deepseek.rx;
 
+import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Config;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

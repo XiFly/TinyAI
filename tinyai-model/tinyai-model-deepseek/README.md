@@ -283,12 +283,12 @@ for (int expertIdx = 0; expertIdx < numExperts; expertIdx++) {
 
 运行演示程序查看完整功能：
 - [DeepSeekV3Demo.java](src/main/java/io/leavesfly/tinyai/deepseek/v3/DeepSeekV3Demo.java)
-- [DeepSeekR1Demo.java](src/main/java/io/leavesfly/tinyai/deepseek/rx/DeepSeekR1Demo.java)
+- [DeepSeekR1Demo.java](src/main/java/io/leavesfly/tinyai/deepseek/r1/DeepSeekR1Demo.java)
 
 ## 📚 详细文档
 
 - [DeepSeek-V3 详细实现说明](src/main/java/io/leavesfly/tinyai/deepseek/v3/README.md)
-- [DeepSeek-R1 详细实现说明](src/main/java/io/leavesfly/tinyai/deepseek/rx/README.md)
+- [DeepSeek-R1 详细实现说明](src/main/java/io/leavesfly/tinyai/deepseek/r1/README.md)
 
 ## 🔧 高级特性
 

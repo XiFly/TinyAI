@@ -677,10 +677,10 @@ qualityScore = (accuracy + logic + completeness + creativity + feasibility) / 5.
 - Self-Reflection in Language Models
 
 ### 源代码
-- [DeepSeekR1Model.java](../src/main/java/io/leavesfly/tinyai/deepseek/rx/DeepSeekR1Model.java)
-- [DeepSeekR1Config.java](../src/main/java/io/leavesfly/tinyai/deepseek/rx/DeepSeekR1Config.java)
-- [DeepSeekR1ReasoningBlock.java](../src/main/java/io/leavesfly/tinyai/deepseek/rx/DeepSeekR1ReasoningBlock.java)
-- [DeepSeekR1ReflectionBlock.java](../src/main/java/io/leavesfly/tinyai/deepseek/rx/DeepSeekR1ReflectionBlock.java)
+- [DeepSeekR1Model.java](../src/main/java/io/leavesfly/tinyai/deepseek/r1/DeepSeekR1Model.java)
+- [DeepSeekR1Config.java](../src/main/java/io/leavesfly/tinyai/deepseek/r1/DeepSeekR1Config.java)
+- [DeepSeekR1ReasoningBlock.java](../src/main/java/io/leavesfly/tinyai/deepseek/r1/DeepSeekR1ReasoningBlock.java)
+- [DeepSeekR1ReflectionBlock.java](../src/main/java/io/leavesfly/tinyai/deepseek/r1/DeepSeekR1ReflectionBlock.java)
 
 ---
 

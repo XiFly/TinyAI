@@ -1,13 +1,13 @@
-package io.leavesfly.tinyai.deepseek.rx.training.demo;
+package io.leavesfly.tinyai.deepseek.r1.training.demo;
 
-import io.leavesfly.tinyai.deepseek.rx.DeepSeekR1Config;
-import io.leavesfly.tinyai.deepseek.rx.DeepSeekR1Model;
-import io.leavesfly.tinyai.deepseek.rx.training.dataset.DeepSeekR1RLVRDataset;
-import io.leavesfly.tinyai.deepseek.rx.training.DeepSeekR1RLVRTrainer;
-import io.leavesfly.tinyai.deepseek.rx.training.verifier.CodeVerifier;
-import io.leavesfly.tinyai.deepseek.rx.training.verifier.LogicVerifier;
-import io.leavesfly.tinyai.deepseek.rx.training.verifier.MathVerifier;
-import io.leavesfly.tinyai.deepseek.rx.training.verifier.VerificationResult;
+import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Config;
+import io.leavesfly.tinyai.deepseek.r1.training.dataset.DeepSeekR1RLVRDataset;
+import io.leavesfly.tinyai.deepseek.r1.training.verifier.CodeVerifier;
+import io.leavesfly.tinyai.deepseek.r1.training.verifier.LogicVerifier;
+import io.leavesfly.tinyai.deepseek.r1.training.verifier.MathVerifier;
+import io.leavesfly.tinyai.deepseek.r1.training.verifier.VerificationResult;
+import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Model;
+import io.leavesfly.tinyai.deepseek.r1.training.DeepSeekR1RLVRTrainer;
 
 /**
  * DeepSeek-R1 RLVR训练演示

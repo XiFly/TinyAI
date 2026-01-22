@@ -1,4 +1,4 @@
-package io.leavesfly.tinyai.deepseek.rx.training.dataset;
+package io.leavesfly.tinyai.deepseek.r1.training.dataset;
 
 import io.leavesfly.tinyai.ndarr.NdArray;
 

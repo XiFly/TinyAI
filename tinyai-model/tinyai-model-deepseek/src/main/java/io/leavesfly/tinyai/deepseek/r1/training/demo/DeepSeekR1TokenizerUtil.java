@@ -1,4 +1,4 @@
-package io.leavesfly.tinyai.deepseek.rx.training.demo;
+package io.leavesfly.tinyai.deepseek.r1.training.demo;
 
 import java.util.*;
 

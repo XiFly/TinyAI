@@ -1,8 +1,8 @@
-package io.leavesfly.tinyai.deepseek.rx.training;
+package io.leavesfly.tinyai.deepseek.r1.training;
 
-import io.leavesfly.tinyai.deepseek.rx.DeepSeekR1Model;
-import io.leavesfly.tinyai.deepseek.rx.DeepSeekR1ReflectionBlock;
-import io.leavesfly.tinyai.deepseek.rx.training.dataset.DeepSeekR1Dataset;
+import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1ReflectionBlock;
+import io.leavesfly.tinyai.deepseek.r1.DeepSeekR1Model;
+import io.leavesfly.tinyai.deepseek.r1.training.dataset.DeepSeekR1Dataset;
 import io.leavesfly.tinyai.func.Variable;
 import io.leavesfly.tinyai.ml.optimize.SGD;
 import io.leavesfly.tinyai.ndarr.NdArray;
